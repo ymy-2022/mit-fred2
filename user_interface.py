@@ -155,11 +155,11 @@ class UserInterface():
     def add_buttons(self):
         font_style = "background-color: green; font-size: 14px; font-weight: bold;"
 
-        motor_close_loop = QPushButton("Start Motor Close Loop")
+        motor_close_loop = QPushButton("Start Motor (Default 30RPM)")
         motor_close_loop.setStyleSheet(font_style)
         motor_close_loop.clicked.connect(self.set_motor_close_loop)
 
-        start_device = QPushButton("Start Temperature Close Loop")
+        start_device = QPushButton("Start Heater (Default 95C)")
         start_device.setStyleSheet(font_style)
         start_device.clicked.connect(self.set_start_device)
 
@@ -175,21 +175,13 @@ class UserInterface():
         download_csv.setStyleSheet(font_style)
         download_csv.clicked.connect(self.set_download_csv)
 
-        heater_open_loop = QPushButton("Start Heater Open Loop")
-        heater_open_loop.setStyleSheet(font_style)
-        heater_open_loop.clicked.connect(self.set_heater_open_loop)
-
-        dc_motor_open_loop = QPushButton("Start DC Motor Open Loop")
-        dc_motor_open_loop.setStyleSheet(font_style)
-        dc_motor_open_loop.clicked.connect(self.set_dc_motor_open_loop)
-
-        camera_feedback = QPushButton("Start camera feedback")
+        camera_feedback = QPushButton("Start Ploting")
         camera_feedback.setStyleSheet(font_style)
         camera_feedback.clicked.connect(self.set_camera_feedback)
 
         self.layout.addWidget(camera_feedback, 9, 9)
-        self.layout.addWidget(motor_close_loop, 2, 6)
-        self.layout.addWidget(start_device, 13, 6)
+        self.layout.addWidget(motor_close_loop, 1, 5)
+        self.layout.addWidget(start_device, 2, 6)
         self.layout.addWidget(calibrate_motor, 1, 1)
         self.layout.addWidget(calibrate_camera, 1, 2)
         self.layout.addWidget(download_csv, 24, 6)
