@@ -18,7 +18,7 @@ class UserInterface():
         self.window = QWidget()
         self.layout = QGridLayout()
 
-        self.diameter_plot = self.add_diameter_plot()
+        self.diameter_plot = self.add_plots()
         self.target_diameter = self.add_diameter_controls()
         self.extrusion_motor_speed = self.add_motor_controls()
         self.target_temperature_label, self.target_temperature, \
@@ -31,7 +31,7 @@ class UserInterface():
         # Editable text box for the CSV file name
         self.csv_filename = QLineEdit()
         self.csv_filename.setText("Enter a file name")
-        self.layout.addWidget(self.csv_filename, 13, 2, 1, 2)
+        self.layout.addWidget(self.csv_filename, 24, 8)
 
         self.device_started = False
         self.start_motor_calibration = False
@@ -46,27 +46,27 @@ class UserInterface():
             self.show_message("Camera calibration data not found", "Please calibrate the camera.")
             self.fiber_camera.diameter_coefficient = 0.00782324
 
-        # Place video feeds underneath the diameter plot, side by side
-        self.layout.addWidget(self.fiber_camera.raw_image, 6, 0, 4, 2)
-        self.layout.addWidget(self.fiber_camera.processed_image, 6, 2, 4, 2)
+        self.layout.addWidget(self.fiber_camera.raw_image, 2, 8, 6, 1)
+        self.layout.addWidget(self.fiber_camera.processed_image, 9, 8, 6, 1)  # moved up, Canny feed removed
 
         self.add_buttons()
 
         self.window.setLayout(self.layout)
         self.window.setWindowTitle("MIT FrED")
-        self.window.setGeometry(100, 100, 900, 600)
-        self.window.setFixedSize(900, 600)
+        self.window.setGeometry(100, 100, 1600, 1000)
+        self.window.setFixedSize(1600, 1000)
         self.window.setAutoFillBackground(True)
 
-    def add_diameter_plot(self):
+    def add_plots(self):
         """Add only the diameter plot to the layout"""
         font_style = "font-size: 16px; font-weight: bold;"
         binary_checkbox = QCheckBox("Binary")
         binary_checkbox.setStyleSheet(font_style)
         diameter_plot = self.Plot("Diameter", "Diameter (mm)")
-        self.layout.addWidget(binary_checkbox, 0, 0)
-        self.layout.addWidget(diameter_plot, 1, 0, 5, 4)
+        self.layout.addWidget(binary_checkbox, 10, 1)
+        self.layout.addWidget(diameter_plot, 2, 0, 8, 4)
         return diameter_plot
+
 
     def add_diameter_controls(self) -> QDoubleSpinBox:
         """Add UI spin boxes to control the diameter"""
@@ -79,8 +79,8 @@ class UserInterface():
         target_diameter.setValue(0.35)
         target_diameter.setSingleStep(0.01)
         target_diameter.setDecimals(2)
-        self.layout.addWidget(target_diameter_label, 11, 0)
-        self.layout.addWidget(target_diameter, 11, 1)
+        self.layout.addWidget(target_diameter_label, 16, 9)
+        self.layout.addWidget(target_diameter, 17, 9)
         return target_diameter
 
     def add_motor_pid_controls(self) -> Tuple[QDoubleSpinBox, QDoubleSpinBox, QDoubleSpinBox, QDoubleSpinBox]:
@@ -122,14 +122,14 @@ class UserInterface():
         motor_kd.setSingleStep(0.01)
         motor_kd.setDecimals(3)
 
-        self.layout.addWidget(motor_setpoint_label, 11, 2)
-        self.layout.addWidget(motor_setpoint, 11, 3)
-        self.layout.addWidget(motor_kp_label, 12, 0)
-        self.layout.addWidget(motor_kp, 12, 1)
-        self.layout.addWidget(motor_ki_label, 12, 2)
-        self.layout.addWidget(motor_ki, 12, 3)
-        self.layout.addWidget(motor_kd_label, 13, 0)
-        self.layout.addWidget(motor_kd, 13, 1)
+        self.layout.addWidget(motor_setpoint_label, 3, 6)
+        self.layout.addWidget(motor_setpoint, 4, 6)
+        self.layout.addWidget(motor_kp_label, 5, 6)
+        self.layout.addWidget(motor_kp, 6, 6)
+        self.layout.addWidget(motor_ki_label, 7, 6)
+        self.layout.addWidget(motor_ki, 8, 6)
+        self.layout.addWidget(motor_kd_label, 9, 6)
+        self.layout.addWidget(motor_kd, 10, 6)
         return motor_setpoint, motor_kp, motor_ki, motor_kd
 
     def add_motor_controls(self) -> QDoubleSpinBox:
@@ -143,8 +143,8 @@ class UserInterface():
         extrusion_motor_speed.setValue(0.0)
         extrusion_motor_speed.setSingleStep(0.1)
         extrusion_motor_speed.setDecimals(2)
-        self.layout.addWidget(extrusion_motor_speed_label, 10, 0)
-        self.layout.addWidget(extrusion_motor_speed, 10, 1)
+        self.layout.addWidget(extrusion_motor_speed_label, 11, 6)
+        self.layout.addWidget(extrusion_motor_speed, 12, 6)
         return extrusion_motor_speed
 
     def add_temperature_controls(self) -> Tuple[QLabel, QSlider, QDoubleSpinBox, QDoubleSpinBox, QDoubleSpinBox]:
@@ -185,14 +185,14 @@ class UserInterface():
         temperature_kd.setSingleStep(0.1)
         temperature_kd.setDecimals(5)
 
-        self.layout.addWidget(target_temperature_label, 10, 2)
-        self.layout.addWidget(target_temperature, 10, 3)
-        self.layout.addWidget(temperature_kp_label, 14, 0)
-        self.layout.addWidget(temperature_kp, 14, 1)
-        self.layout.addWidget(temperature_ki_label, 14, 2)
-        self.layout.addWidget(temperature_ki, 14, 3)
-        self.layout.addWidget(temperature_kd_label, 15, 0)
-        self.layout.addWidget(temperature_kd, 15, 1)
+        self.layout.addWidget(target_temperature_label, 14, 6)
+        self.layout.addWidget(target_temperature, 15, 6)
+        self.layout.addWidget(temperature_kp_label, 16, 6)
+        self.layout.addWidget(temperature_kp, 17, 6)
+        self.layout.addWidget(temperature_ki_label, 18, 6)
+        self.layout.addWidget(temperature_ki, 19, 6)
+        self.layout.addWidget(temperature_kd_label, 20, 6)
+        self.layout.addWidget(temperature_kd, 21, 6)
         return target_temperature_label, target_temperature, temperature_kp, temperature_ki, temperature_kd
 
     def add_fan_controls(self) -> Tuple[QLabel, QSlider]:
@@ -205,8 +205,8 @@ class UserInterface():
         fan_duty_cycle.setMaximum(100)
         fan_duty_cycle.setValue(30)
         fan_duty_cycle.valueChanged.connect(self.update_fan_slider_label)
-        self.layout.addWidget(fan_duty_cycle_label, 15, 2)
-        self.layout.addWidget(fan_duty_cycle, 15, 3)
+        self.layout.addWidget(fan_duty_cycle_label, 22, 6)
+        self.layout.addWidget(fan_duty_cycle, 23, 6)
         return fan_duty_cycle_label, fan_duty_cycle
 
     def add_heater_open_loop_pwm_control(self) -> Tuple[QLabel, QDoubleSpinBox]:
@@ -220,8 +220,8 @@ class UserInterface():
         heater_open_loop_pwm.setValue(0)
         heater_open_loop_pwm.setSingleStep(1)
         heater_open_loop_pwm.setDecimals(0)
-        self.layout.addWidget(heater_open_loop_pwm_label, 16, 0)
-        self.layout.addWidget(heater_open_loop_pwm, 16, 1)
+        self.layout.addWidget(heater_open_loop_pwm_label, 3, 9)
+        self.layout.addWidget(heater_open_loop_pwm, 4, 9)
         return heater_open_loop_pwm_label, heater_open_loop_pwm
 
     def add_dc_motor_controls(self) -> Tuple[QLabel, QDoubleSpinBox]:
@@ -235,8 +235,8 @@ class UserInterface():
         dc_motor_pwm.setValue(0)
         dc_motor_pwm.setSingleStep(1)
         dc_motor_pwm.setDecimals(0)
-        self.layout.addWidget(dc_motor_pwm_label, 16, 2)
-        self.layout.addWidget(dc_motor_pwm, 16, 3)
+        self.layout.addWidget(dc_motor_pwm_label, 7, 9)
+        self.layout.addWidget(dc_motor_pwm, 8, 9)
         return dc_motor_pwm_label, dc_motor_pwm
 
     def add_buttons(self):
@@ -275,14 +275,14 @@ class UserInterface():
         camera_feedback.setStyleSheet(font_style)
         camera_feedback.clicked.connect(self.set_camera_feedback)
 
-        self.layout.addWidget(camera_feedback, 17, 0)
-        self.layout.addWidget(motor_close_loop, 17, 1)
-        self.layout.addWidget(start_device, 17, 2)
-        self.layout.addWidget(calibrate_motor, 18, 0)
-        self.layout.addWidget(calibrate_camera, 18, 1)
-        self.layout.addWidget(download_csv, 18, 2)
-        self.layout.addWidget(heater_open_loop, 17, 3)
-        self.layout.addWidget(dc_motor_open_loop, 18, 3)
+        self.layout.addWidget(camera_feedback, 9, 9)
+        self.layout.addWidget(motor_close_loop, 2, 6)
+        self.layout.addWidget(start_device, 13, 6)
+        self.layout.addWidget(calibrate_motor, 1, 1)
+        self.layout.addWidget(calibrate_camera, 1, 2)
+        self.layout.addWidget(download_csv, 24, 6)
+        self.layout.addWidget(heater_open_loop, 2, 9)
+        self.layout.addWidget(dc_motor_open_loop, 6, 9)
 
     def start_gui(self) -> None:
         """Start the GUI"""
