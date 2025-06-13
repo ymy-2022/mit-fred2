@@ -21,8 +21,6 @@ class UserInterface():
         self.extrusion_motor_speed = self.add_motor_controls()
         self.target_temperature_label, self.target_temperature = self.add_temperature_controls()
         self.fan_duty_cycle_label, self.fan_duty_cycle = self.add_fan_controls()
-        self.heater_open_loop_pwm_label, self.heater_open_loop_pwm = self.add_heater_open_loop_pwm_control()
-        self.dc_motor_pwm_label, self.dc_motor_pwm = self.add_dc_motor_controls()
 
         # Hide temperature setpoint and fan duty cycle controls
         self.target_temperature_label.hide()
@@ -37,8 +35,6 @@ class UserInterface():
 
         self.device_started = False
         self.start_motor_calibration = False
-        self.heater_open_loop_enabled = False
-        self.dc_motor_open_loop_enabled = False
         self.camera_feedback_enabled = False
         self.dc_motor_close_loop_enabled = False
 
@@ -124,34 +120,6 @@ class UserInterface():
         self.layout.addWidget(fan_duty_cycle, 23, 6)
         return fan_duty_cycle_label, fan_duty_cycle
 
-    def add_heater_open_loop_pwm_control(self):
-        font_style = "font-size: %ipx; font-weight: bold;"
-        heater_open_loop_pwm_label = QLabel("Heater Open Loop PWM (%)")
-        heater_open_loop_pwm_label.setStyleSheet(font_style % 14)
-        heater_open_loop_pwm = QDoubleSpinBox()
-        heater_open_loop_pwm.setMinimum(0)
-        heater_open_loop_pwm.setMaximum(100)
-        heater_open_loop_pwm.setValue(0)
-        heater_open_loop_pwm.setSingleStep(1)
-        heater_open_loop_pwm.setDecimals(0)
-        self.layout.addWidget(heater_open_loop_pwm_label, 3, 9)
-        self.layout.addWidget(heater_open_loop_pwm, 4, 9)
-        return heater_open_loop_pwm_label, heater_open_loop_pwm
-
-    def add_dc_motor_controls(self):
-        font_style = "font-size: %ipx; font-weight: bold;"
-        dc_motor_pwm_label = QLabel("DC Motor PWM (%)")
-        dc_motor_pwm_label.setStyleSheet(font_style % 14)
-        dc_motor_pwm = QDoubleSpinBox()
-        dc_motor_pwm.setMinimum(0)
-        dc_motor_pwm.setMaximum(100)
-        dc_motor_pwm.setValue(0)
-        dc_motor_pwm.setSingleStep(1)
-        dc_motor_pwm.setDecimals(0)
-        self.layout.addWidget(dc_motor_pwm_label, 7, 9)
-        self.layout.addWidget(dc_motor_pwm, 8, 9)
-        return dc_motor_pwm_label, dc_motor_pwm
-
     def add_buttons(self):
         font_style = "background-color: green; font-size: 14px; font-weight: bold;"
 
@@ -185,8 +153,6 @@ class UserInterface():
         self.layout.addWidget(calibrate_motor, 1, 1)
         self.layout.addWidget(calibrate_camera, 1, 2)
         self.layout.addWidget(download_csv, 24, 6)
-        self.layout.addWidget(heater_open_loop, 2, 9)
-        self.layout.addWidget(dc_motor_open_loop, 6, 9)
 
     def start_gui(self) -> None:
         timer = QTimer()
@@ -195,44 +161,7 @@ class UserInterface():
         self.window.show()
         self.app.exec_()
 
-    def set_heater_open_loop(self) -> None:
-        if self.device_started:
-            QMessageBox.warning(self.app.activeWindow(), "Control Error",
-                                "Cannot start open loop control while close loop is running.\n"
-                                "Please restart the program.")
-            return
-        self.heater_open_loop_enabled = not self.heater_open_loop_enabled
-        if self.heater_open_loop_enabled:
-            QMessageBox.information(self.app.activeWindow(),
-                                    "Heater Control", "Heater open loop control started.")
-        else:
-            QMessageBox.information(self.app.activeWindow(),
-                                    "Heater Control", "Heater open loop control stopped.")
-
-    def set_dc_motor_open_loop(self) -> None:
-        if self.dc_motor_close_loop_enabled:
-            QMessageBox.warning(self.app.activeWindow(),
-                                "Control Error",
-                                "Cannot enable open loop control while close loop is active.\n"
-                                "Please restart the program.")
-            return
-        self.dc_motor_open_loop_enabled = not self.dc_motor_open_loop_enabled
-        if self.dc_motor_open_loop_enabled:
-            QMessageBox.information(self.app.activeWindow(),
-                                    "DC Motor Control",
-                                    "DC Motor open loop control started.")
-        else:
-            QMessageBox.information(self.app.activeWindow(),
-                                    "DC Motor Control",
-                                    "DC Motor open loop control stopped.")
-
     def set_motor_close_loop(self) -> None:
-        if self.dc_motor_open_loop_enabled:
-            QMessageBox.warning(self.app.activeWindow(),
-                                "Control Error",
-                                "Cannot start Close Loop while Open Loop is running.\n"
-                                "Please stop Open Loop control first.")
-            return
         self.dc_motor_close_loop_enabled = not self.dc_motor_close_loop_enabled
         if self.dc_motor_close_loop_enabled:
             # Default motor PID and setpoint
@@ -265,12 +194,6 @@ class UserInterface():
                                     "Camera Feedback", "Camera feedback stopped.")
 
     def set_start_device(self) -> None:
-        if self.heater_open_loop_enabled:
-            QMessageBox.warning(self.app.activeWindow(),
-                                "Control Error",
-                                "Cannot start Close Loop while open loop control is running.\n"
-                                "Please restart the program.")
-            return
         # Default temperature PID and setpoint and fan duty cycle
         setpoint = 95
         kp = 1.4
