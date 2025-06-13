@@ -22,11 +22,9 @@ class UserInterface():
         self.target_diameter = self.add_diameter_controls()
         self.extrusion_motor_speed = self.add_motor_controls()
         self.target_temperature_label, self.target_temperature, \
-        self.temperature_kp, self.temperature_ki, self.temperature_kd = self.add_temperature_controls()
         self.fan_duty_cycle_label, self.fan_duty_cycle = self.add_fan_controls()
         self.heater_open_loop_pwm_label, self.heater_open_loop_pwm = self.add_heater_open_loop_pwm_control()
         self.dc_motor_pwm_label, self.dc_motor_pwm = self.add_dc_motor_controls()
-        self.motor_setpoint, self.motor_kp, self.motor_ki, self.motor_kd = self.add_motor_pid_controls()
 
         # Editable text box for the CSV file name
         self.csv_filename = QLineEdit()
@@ -85,9 +83,6 @@ class UserInterface():
 
     def add_motor_pid_controls(self) -> Tuple[QDoubleSpinBox, QDoubleSpinBox, QDoubleSpinBox, QDoubleSpinBox]:
         """Add UI controls for motor PID parameters"""
-        font_style = "font-size: %ipx; font-weight: bold;"
-        motor_setpoint_label = QLabel("Motor Setpoint (RPM)")
-        motor_setpoint_label.setStyleSheet(font_style % 14)
         motor_setpoint = QDoubleSpinBox()
         motor_setpoint.setMinimum(0)
         motor_setpoint.setMaximum(60)
@@ -95,8 +90,6 @@ class UserInterface():
         motor_setpoint.setSingleStep(1)
         motor_setpoint.setDecimals(1)
 
-        motor_kp_label = QLabel("Motor Kp")
-        motor_kp_label.setStyleSheet(font_style % 14)
         motor_kp = QDoubleSpinBox()
         motor_kp.setMinimum(0)
         motor_kp.setMaximum(10)
@@ -104,8 +97,6 @@ class UserInterface():
         motor_kp.setSingleStep(0.1)
         motor_kp.setDecimals(3)
 
-        motor_ki_label = QLabel("Motor Ki")
-        motor_ki_label.setStyleSheet(font_style % 14)
         motor_ki = QDoubleSpinBox()
         motor_ki.setMinimum(0)
         motor_ki.setMaximum(10)
@@ -113,8 +104,6 @@ class UserInterface():
         motor_ki.setSingleStep(0.1)
         motor_ki.setDecimals(3)
 
-        motor_kd_label = QLabel("Motor Kd")
-        motor_kd_label.setStyleSheet(font_style % 14)
         motor_kd = QDoubleSpinBox()
         motor_kd.setMinimum(0)
         motor_kd.setMaximum(10)
@@ -122,14 +111,6 @@ class UserInterface():
         motor_kd.setSingleStep(0.01)
         motor_kd.setDecimals(3)
 
-        self.layout.addWidget(motor_setpoint_label, 3, 6)
-        self.layout.addWidget(motor_setpoint, 4, 6)
-        self.layout.addWidget(motor_kp_label, 5, 6)
-        self.layout.addWidget(motor_kp, 6, 6)
-        self.layout.addWidget(motor_ki_label, 7, 6)
-        self.layout.addWidget(motor_ki, 8, 6)
-        self.layout.addWidget(motor_kd_label, 9, 6)
-        self.layout.addWidget(motor_kd, 10, 6)
         return motor_setpoint, motor_kp, motor_ki, motor_kd
 
     def add_motor_controls(self) -> QDoubleSpinBox:
