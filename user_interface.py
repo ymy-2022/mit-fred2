@@ -24,6 +24,12 @@ class UserInterface():
         self.heater_open_loop_pwm_label, self.heater_open_loop_pwm = self.add_heater_open_loop_pwm_control()
         self.dc_motor_pwm_label, self.dc_motor_pwm = self.add_dc_motor_controls()
 
+        # Hide temperature setpoint and fan duty cycle controls
+        self.target_temperature_label.hide()
+        self.target_temperature.hide()
+        self.fan_duty_cycle_label.hide()
+        self.fan_duty_cycle.hide()
+
         # Editable text box for the CSV file name
         self.csv_filename = QLineEdit()
         self.csv_filename.setText("Enter a file name")
@@ -273,14 +279,15 @@ class UserInterface():
                                 "Cannot start Close Loop while open loop control is running.\n"
                                 "Please restart the program.")
             return
-        # Default temperature PID and setpoint
+        # Default temperature PID and setpoint and fan duty cycle
         setpoint = 95
         kp = 1.4
         ki = 0.2
         kd = 0.8
+        fan_duty_cycle = 30
         # Use these in your control logic as needed
         QMessageBox.information(self.app.activeWindow(), "Device Start",
-                                f"Temperature close loop started (setpoint={setpoint}, Kp={kp}, Ki={ki}, Kd={kd})")
+                                f"Temperature close loop started (setpoint={setpoint}, Kp={kp}, Ki={ki}, Kd={kd}, Fan={fan_duty_cycle}%)")
         self.device_started = True
 
     def set_calibrate_motor(self) -> None:
