@@ -147,8 +147,8 @@ class UserInterface():
         camera_feedback.setStyleSheet(font_style)
         camera_feedback.clicked.connect(self.set_camera_feedback)
 
-        self.layout.addWidget(camera_feedback, 9, 9)
-        self.layout.addWidget(motor_close_loop, 1, 5)
+        self.layout.addWidget(camera_feedback, 1, 9)
+        self.layout.addWidget(motor_close_loop, 1, 6)
         self.layout.addWidget(start_device, 2, 6)
         self.layout.addWidget(calibrate_motor, 1, 1)
         self.layout.addWidget(calibrate_camera, 1, 2)
