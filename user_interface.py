@@ -1,7 +1,5 @@
 """File to setup the layout of the User Interface"""
 
-from typing import Tuple
-
 from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel, QDoubleSpinBox, QSlider, QPushButton, QMessageBox, QLineEdit, QCheckBox
 from PyQt5.QtCore import QTimer, Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -21,7 +19,7 @@ class UserInterface():
         self.diameter_plot = self.add_plots()
         self.target_diameter = self.add_diameter_controls()
         self.extrusion_motor_speed = self.add_motor_controls()
-        self.target_temperature_label, self.target_temperature, \
+        self.target_temperature_label, self.target_temperature = self.add_temperature_controls()
         self.fan_duty_cycle_label, self.fan_duty_cycle = self.add_fan_controls()
         self.heater_open_loop_pwm_label, self.heater_open_loop_pwm = self.add_heater_open_loop_pwm_control()
         self.dc_motor_pwm_label, self.dc_motor_pwm = self.add_dc_motor_controls()
@@ -45,7 +43,7 @@ class UserInterface():
             self.fiber_camera.diameter_coefficient = 0.00782324
 
         self.layout.addWidget(self.fiber_camera.raw_image, 2, 8, 6, 1)
-        self.layout.addWidget(self.fiber_camera.processed_image, 9, 8, 6, 1)  # moved up, Canny feed removed
+        self.layout.addWidget(self.fiber_camera.processed_image, 9, 8, 6, 1)
 
         self.add_buttons()
 
@@ -65,9 +63,7 @@ class UserInterface():
         self.layout.addWidget(diameter_plot, 2, 0, 8, 4)
         return diameter_plot
 
-
-    def add_diameter_controls(self) -> QDoubleSpinBox:
-        """Add UI spin boxes to control the diameter"""
+    def add_diameter_controls(self):
         font_style = "font-size: %ipx; font-weight: bold;"
         target_diameter_label = QLabel("Target Diameter (mm)")
         target_diameter_label.setStyleSheet(font_style % 16)
@@ -81,40 +77,7 @@ class UserInterface():
         self.layout.addWidget(target_diameter, 17, 9)
         return target_diameter
 
-    def add_motor_pid_controls(self) -> Tuple[QDoubleSpinBox, QDoubleSpinBox, QDoubleSpinBox, QDoubleSpinBox]:
-        """Add UI controls for motor PID parameters"""
-        motor_setpoint = QDoubleSpinBox()
-        motor_setpoint.setMinimum(0)
-        motor_setpoint.setMaximum(60)
-        motor_setpoint.setValue(30)
-        motor_setpoint.setSingleStep(1)
-        motor_setpoint.setDecimals(1)
-
-        motor_kp = QDoubleSpinBox()
-        motor_kp.setMinimum(0)
-        motor_kp.setMaximum(10)
-        motor_kp.setValue(0.4)
-        motor_kp.setSingleStep(0.1)
-        motor_kp.setDecimals(3)
-
-        motor_ki = QDoubleSpinBox()
-        motor_ki.setMinimum(0)
-        motor_ki.setMaximum(10)
-        motor_ki.setValue(0.2)
-        motor_ki.setSingleStep(0.1)
-        motor_ki.setDecimals(3)
-
-        motor_kd = QDoubleSpinBox()
-        motor_kd.setMinimum(0)
-        motor_kd.setMaximum(10)
-        motor_kd.setValue(0.05)
-        motor_kd.setSingleStep(0.01)
-        motor_kd.setDecimals(3)
-
-        return motor_setpoint, motor_kp, motor_ki, motor_kd
-
-    def add_motor_controls(self) -> QDoubleSpinBox:
-        """Add UI spin boxes to control the motors"""
+    def add_motor_controls(self):
         font_style = "font-size: %ipx; font-weight: bold;"
         extrusion_motor_speed_label = QLabel("Extrusion Motor Speed (RPM)")
         extrusion_motor_speed_label.setStyleSheet(font_style % 16)
@@ -128,56 +91,21 @@ class UserInterface():
         self.layout.addWidget(extrusion_motor_speed, 12, 6)
         return extrusion_motor_speed
 
-    def add_temperature_controls(self) -> Tuple[QLabel, QSlider, QDoubleSpinBox, QDoubleSpinBox, QDoubleSpinBox]:
-        """Add UI controls for the temperature"""
+    def add_temperature_controls(self):
+        """Add UI controls for the temperature (no PID controls)"""
         font_style = "font-size: %ipx; font-weight: bold;"
         target_temperature_label = QLabel("Temperature Setpoint(C)")
         target_temperature_label.setStyleSheet(font_style % 16)
         target_temperature = QSlider(Qt.Horizontal)
         target_temperature.setMinimum(65)
         target_temperature.setMaximum(105)
-        target_temperature.setValue(95)
+        target_temperature.setValue(95)  # Default 95C
         target_temperature.valueChanged.connect(self.update_temperature_slider_label)
-
-        temperature_kp_label = QLabel("Temperature Kp")
-        temperature_kp_label.setStyleSheet(font_style % 14)
-        temperature_kp = QDoubleSpinBox()
-        temperature_kp.setMinimum(0.0)
-        temperature_kp.setMaximum(2.0)
-        temperature_kp.setValue(1.4)
-        temperature_kp.setSingleStep(0.1)
-        temperature_kp.setDecimals(5)
-
-        temperature_ki_label = QLabel("Temperature Ki")
-        temperature_ki_label.setStyleSheet(font_style % 14)
-        temperature_ki = QDoubleSpinBox()
-        temperature_ki.setMinimum(0.0)
-        temperature_ki.setMaximum(2.0)
-        temperature_ki.setValue(0.2)
-        temperature_ki.setSingleStep(0.1)
-        temperature_ki.setDecimals(5)
-
-        temperature_kd_label = QLabel("Temperature Kd")
-        temperature_kd_label.setStyleSheet(font_style % 14)
-        temperature_kd = QDoubleSpinBox()
-        temperature_kd.setMinimum(0.0)
-        temperature_kd.setMaximum(2.0)
-        temperature_kd.setValue(0.8)
-        temperature_kd.setSingleStep(0.1)
-        temperature_kd.setDecimals(5)
-
         self.layout.addWidget(target_temperature_label, 14, 6)
         self.layout.addWidget(target_temperature, 15, 6)
-        self.layout.addWidget(temperature_kp_label, 16, 6)
-        self.layout.addWidget(temperature_kp, 17, 6)
-        self.layout.addWidget(temperature_ki_label, 18, 6)
-        self.layout.addWidget(temperature_ki, 19, 6)
-        self.layout.addWidget(temperature_kd_label, 20, 6)
-        self.layout.addWidget(temperature_kd, 21, 6)
-        return target_temperature_label, target_temperature, temperature_kp, temperature_ki, temperature_kd
+        return target_temperature_label, target_temperature
 
-    def add_fan_controls(self) -> Tuple[QLabel, QSlider]:
-        """Add UI controls for the fan"""
+    def add_fan_controls(self):
         font_style = "font-size: %ipx; font-weight: bold;"
         fan_duty_cycle_label = QLabel("Fan Duty Cycle (%)")
         fan_duty_cycle_label.setStyleSheet(font_style % 14)
@@ -190,8 +118,7 @@ class UserInterface():
         self.layout.addWidget(fan_duty_cycle, 23, 6)
         return fan_duty_cycle_label, fan_duty_cycle
 
-    def add_heater_open_loop_pwm_control(self) -> Tuple[QLabel, QDoubleSpinBox]:
-        """Add UI controls for the heater PWM open loop"""
+    def add_heater_open_loop_pwm_control(self):
         font_style = "font-size: %ipx; font-weight: bold;"
         heater_open_loop_pwm_label = QLabel("Heater Open Loop PWM (%)")
         heater_open_loop_pwm_label.setStyleSheet(font_style % 14)
@@ -205,8 +132,7 @@ class UserInterface():
         self.layout.addWidget(heater_open_loop_pwm, 4, 9)
         return heater_open_loop_pwm_label, heater_open_loop_pwm
 
-    def add_dc_motor_controls(self) -> Tuple[QLabel, QDoubleSpinBox]:
-        """Add UI controls for the DC motor open loop"""
+    def add_dc_motor_controls(self):
         font_style = "font-size: %ipx; font-weight: bold;"
         dc_motor_pwm_label = QLabel("DC Motor PWM (%)")
         dc_motor_pwm_label.setStyleSheet(font_style % 14)
@@ -221,7 +147,6 @@ class UserInterface():
         return dc_motor_pwm_label, dc_motor_pwm
 
     def add_buttons(self):
-        """Add buttons to the layout"""
         font_style = "background-color: green; font-size: 14px; font-weight: bold;"
 
         motor_close_loop = QPushButton("Start Motor Close Loop")
@@ -266,7 +191,6 @@ class UserInterface():
         self.layout.addWidget(dc_motor_open_loop, 6, 9)
 
     def start_gui(self) -> None:
-        """Start the GUI"""
         timer = QTimer()
         timer.timeout.connect(self.fiber_camera.camera_loop)
         timer.start(200)
@@ -274,7 +198,6 @@ class UserInterface():
         self.app.exec_()
 
     def set_heater_open_loop(self) -> None:
-        """Toggle heater open loop control"""
         if self.device_started:
             QMessageBox.warning(self.app.activeWindow(), "Control Error",
                                 "Cannot start open loop control while close loop is running.\n"
@@ -289,7 +212,6 @@ class UserInterface():
                                     "Heater Control", "Heater open loop control stopped.")
 
     def set_dc_motor_open_loop(self) -> None:
-        """Toggle DC motor open loop control"""
         if self.dc_motor_close_loop_enabled:
             QMessageBox.warning(self.app.activeWindow(),
                                 "Control Error",
@@ -307,7 +229,6 @@ class UserInterface():
                                     "DC Motor open loop control stopped.")
 
     def set_motor_close_loop(self) -> None:
-        """Toggle motor close loop control"""
         if self.dc_motor_open_loop_enabled:
             QMessageBox.warning(self.app.activeWindow(),
                                 "Control Error",
@@ -316,24 +237,27 @@ class UserInterface():
             return
         self.dc_motor_close_loop_enabled = not self.dc_motor_close_loop_enabled
         if self.dc_motor_close_loop_enabled:
+            # Default motor PID and setpoint
+            setpoint = 30
+            kp = 0.4
+            ki = 0.2
+            kd = 0.05
+            # Use these in your control logic as needed
             QMessageBox.information(self.app.activeWindow(),
                                     "Motor Control",
-                                    "Motor close loop control started.")
+                                    f"Motor close loop started (setpoint={setpoint}, Kp={kp}, Ki={ki}, Kd={kd})")
         else:
             QMessageBox.information(self.app.activeWindow(),
                                     "Motor Control",
                                     "Motor close loop control stopped.")
 
     def update_temperature_slider_label(self, value) -> None:
-        """Update the temperature slider label"""
         self.target_temperature_label.setText(f"Temperature: {value} C")
 
     def update_fan_slider_label(self, value) -> None:
-        """Update the fan slider label"""
         self.fan_duty_cycle_label.setText(f"Fan Duty Cycle: {value} %")
 
     def set_camera_feedback(self) -> None:
-        """Toggle camera feedback control"""
         self.camera_feedback_enabled = not self.camera_feedback_enabled
         if self.camera_feedback_enabled:
             QMessageBox.information(self.app.activeWindow(),
@@ -343,25 +267,28 @@ class UserInterface():
                                     "Camera Feedback", "Camera feedback stopped.")
 
     def set_start_device(self) -> None:
-        """Set start device flag"""
         if self.heater_open_loop_enabled:
             QMessageBox.warning(self.app.activeWindow(),
                                 "Control Error",
                                 "Cannot start Close Loop while open loop control is running.\n"
                                 "Please restart the program.")
             return
+        # Default temperature PID and setpoint
+        setpoint = 95
+        kp = 1.4
+        ki = 0.2
+        kd = 0.8
+        # Use these in your control logic as needed
         QMessageBox.information(self.app.activeWindow(), "Device Start",
-                                "Device is starting.")
+                                f"Temperature close loop started (setpoint={setpoint}, Kp={kp}, Ki={ki}, Kd={kd})")
         self.device_started = True
 
     def set_calibrate_motor(self) -> None:
-        """Set calibrate motor flag"""
         QMessageBox.information(self.app.activeWindow(), "Motor Calibration",
                                 "Motor is calibrating.")
         self.start_motor_calibration = True
 
     def set_calibrate_camera(self) -> None:
-        """Call calibrate camera"""
         QMessageBox.information(self.app.activeWindow(), "Camera Calibration",
                                 "Camera is calibrating.")
         self.fiber_camera.calibrate()
@@ -370,17 +297,14 @@ class UserInterface():
                                 "Please restart the program.")
 
     def set_download_csv(self) -> None:
-        """Call download csv from database"""
         QMessageBox.information(self.app.activeWindow(), "Download CSV",
                                 "Downloading CSV file.")
         Database.generate_csv(self.csv_filename.text())
 
     def show_message(self, title: str, message: str) -> None:
-        """Show a message box"""
         QMessageBox.information(self.app.activeWindow(), title, message)
 
     class Plot(FigureCanvas):
-        """Base class for plots"""
         def __init__(self, title: str, y_label: str) -> None:
             self.figure = Figure()
             self.axes = self.figure.add_subplot(111)
@@ -397,7 +321,6 @@ class UserInterface():
             self.setpoint_data = []
 
         def update_plot(self, x: float, y: float, setpoint: float) -> None:
-            """Update the plot"""
             self.x_data.append(x)
             self.y_data.append(y)
             self.setpoint_data.append(setpoint)
