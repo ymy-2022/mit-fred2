@@ -34,7 +34,7 @@ class UserInterface:
             self.fiber_camera.diameter_coefficient = 0.00782324
 
         # 让两个视频控件宽度与plot一致（4列640px）
-        self.layout.addWidget(self.fiber_camera.raw_image, 2, 4, 6, 4)      # 6行4列（640x300）
+        self.layout.addWidget(self.fiber_camera.raw_image, 10, 0, 6, 4)      # 6行4列（640x300）
         self.layout.addWidget(self.fiber_camera.processed_image, 8, 4, 6, 4) # 6行4列（640x300）
 
         self.add_buttons()
