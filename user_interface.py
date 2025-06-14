@@ -39,7 +39,7 @@ class UserInterface:
         self.layout.addWidget(raw_image_label, 8, 0, 1, 4)  # 1行4列，与 raw_image 对齐
 
         # 让两个视频控件宽度与plot一致（4列640px）
-        self.layout.addWidget(self.fiber_camera.raw_image, 9, 0, 6, 4)      # 6行4列（640x300）
+        self.layout.addWidget(self.fiber_camera.raw_image, 8, 0, 6, 4)      # 6行4列（640x300）
         self.layout.addWidget(self.fiber_camera.processed_image, 8, 4, 6, 4) # 6行4列（640x300）
 
         self.add_buttons()
