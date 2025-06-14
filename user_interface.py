@@ -110,7 +110,7 @@ class UserInterface:
     def set_calibrate_camera(self) -> None:
         QMessageBox.information(self.window, "Camera Calibration", "Camera is calibrating.")
         self.fiber_camera.calibrate()
-        QMessageBox.information(self.window, "Calibration", "Camera calibration completed. Please restart the program.")
+        QMessageBox.information(self.window, "Calibration", "Camera calibration completed.")
 
     def set_download_csv(self) -> None:
         QMessageBox.information(self.window, "Download CSV", "Downloading CSV file.")
