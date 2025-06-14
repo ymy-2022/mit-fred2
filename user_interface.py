@@ -137,7 +137,7 @@ class UserInterface:
             self.figure = Figure()
             self.axes = self.figure.add_subplot(111)
             super().__init__(self.figure)
-            self.figure.subplots_adjust(top=0.88)  # 裁掉title上方白边
+            self.figure.subplots_adjust(top=0.8)  # 裁掉title上方白边
             self.axes.set_title(title)
             self.axes.set_xlabel("Time (s)")
             self.axes.set_ylabel(y_label)
