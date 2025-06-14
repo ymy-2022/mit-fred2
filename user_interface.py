@@ -15,15 +15,13 @@ class UserInterface:
         self.layout = QGridLayout()
 
         self.device_started = False
-        self.start_motor_calibration = False  # 可保留但无实际用处
         self.camera_feedback_enabled = False
         self.dc_motor_close_loop_enabled = False
 
-        # motor_setpoint 直接写死（比如30.0）
         self.motor_setpoint = 30.0
 
         self.diameter_plot = self.add_plots()
-        self.target_diameter = self.add_diameter_controls()  # QDoubleSpinBox
+        self.target_diameter = self.add_diameter_controls()
 
         self.csv_filename = QLineEdit("Enter a file name")
         self.layout.addWidget(self.csv_filename, 24, 8)
@@ -33,8 +31,15 @@ class UserInterface:
             self.show_message("Camera calibration data not found", "Please calibrate the camera.")
             self.fiber_camera.diameter_coefficient = 0.00782324
 
-        self.layout.addWidget(self.fiber_camera.raw_image, 2, 8, 6, 1)
-        self.layout.addWidget(self.fiber_camera.processed_image, 9, 8, 6, 1)
+        # ====== 关键布局调整：三大区块均匀分布 ======
+        self.layout.addWidget(self.fiber_camera.raw_image, 2, 0, 6, 3)         # 左3列
+        self.layout.addWidget(self.fiber_camera.processed_image, 2, 3, 6, 3)   # 中3列
+        self.layout.addWidget(self.diameter_plot, 2, 6, 6, 3)                  # 右3列
+
+        # 设置9列等宽
+        for i in range(9):
+            self.layout.setColumnStretch(i, 1)
+        # ==========================================
 
         self.add_buttons()
 
@@ -46,7 +51,6 @@ class UserInterface:
 
     def add_plots(self):
         diameter_plot = self.Plot("Diameter", "Diameter (mm)")
-        self.layout.addWidget(diameter_plot, 2, 0, 8, 4)
         return diameter_plot
 
     def add_diameter_controls(self):
@@ -65,7 +69,6 @@ class UserInterface:
         self.create_button("Start Motor (Default 30RPM)", self.set_motor_close_loop, 1, 6, "motor_button")
         self.create_button("Start Ploting", self.set_camera_feedback, 1, 9)
         self.create_button("Start Heater (Default 95C)", self.set_start_device, 2, 6)
-        # 删除了“Calibrate motor”按钮
         self.create_button("Calibrate camera", self.set_calibrate_camera, 1, 2)
         self.create_button("Download CSV File", self.set_download_csv, 24, 6)
         self.create_button("Exit", self.exit_program, 24, 9)
@@ -102,8 +105,6 @@ class UserInterface:
     def set_start_device(self) -> None:
         self.device_started = True
         QMessageBox.information(self.window, "Device Start", "Temperature closed loop started (setpoint=95, Kp=1.4, Ki=0.2, Kd=0.8, Fan=30%)")
-
-    # 删除了 set_calibrate_motor 方法
 
     def set_calibrate_camera(self) -> None:
         QMessageBox.information(self.window, "Camera Calibration", "Camera is calibrating.")
