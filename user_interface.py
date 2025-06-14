@@ -69,11 +69,10 @@ class UserInterface:
         return spin
 
     def add_buttons(self):
-        self.create_button("Start Motor (Default 30RPM)", self.set_motor_close_loop, 1, 6, "motor_button")
-        self.create_button("Start Ploting", self.set_camera_feedback, 1, 9)
+        self.create_button("Start Motor (Default 30RPM)", self.set_motor_close_loop, 0, 6, "motor_button")
+        self.create_button("Start Ploting", self.set_camera_feedback, 0, 9)
         self.create_button("Start Heater (Default 95C)", self.set_start_device, 2, 6)
-        # 删除了“Calibrate motor”按钮
-        self.create_button("Calibrate camera", self.set_calibrate_camera, 1, 2)
+        self.create_button("Calibrate camera", self.set_calibrate_camera, 0, 5)
         self.create_button("Download CSV File", self.set_download_csv, 19, 6)
         self.create_button("Exit", self.exit_program, 19, 9)
 
