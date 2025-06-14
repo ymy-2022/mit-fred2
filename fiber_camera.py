@@ -1,158 +1,193 @@
-from PyQt5.QtWidgets import (
-    QApplication, QWidget, QGridLayout, QLabel, QDoubleSpinBox, QPushButton, QMessageBox, QLineEdit
-)
-from PyQt5.QtCore import QTimer
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
+"""Module to process video from camera to obtain the fiber diameter and display it"""
+import time
+import sys
+import cv2
+import numpy as np
+from typing import Tuple
+from PyQt5.QtWidgets import QWidget, QLabel, QDoubleSpinBox, QCheckBox, QApplication, QInputDialog, QMessageBox
+from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtCore import QTimer, Qt
 
 from database import Database
-from fiber_camera import FiberCamera
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from user_interface import UserInterface
 
-class UserInterface:
-    def __init__(self) -> None:
-        self.app = QApplication.instance() or QApplication([])
-        self.window = QWidget()
-        self.layout = QGridLayout()
+class FiberCamera(QWidget):
+    """Process video from camera to obtain the fiber diameter and display it"""
+    use_binary_for_edges = True
 
-        self.device_started = False
-        self.start_motor_calibration = False  # 可保留但无实际用处
-        self.camera_feedback_enabled = False
-        self.dc_motor_close_loop_enabled = False
+    def __init__(self, target_diameter: QDoubleSpinBox, gui: 'UserInterface') -> None:
+        super().__init__()
+        self.raw_image = QLabel()
+        self.canny_image = QLabel()
+        self.processed_image = QLabel()
+        self.target_diameter = target_diameter
+        self.capture = cv2.VideoCapture(0)
+        self.gui = gui
+        self.diameter_coefficient = Database.get_calibration_data("diameter_coefficient")
+        self.previous_time = 0.0
 
-        # motor_setpoint 直接写死（比如30.0）
-        self.motor_setpoint = 30.0
+    def camera_loop(self) -> None:
+        """Loop to capture and process frames from the camera"""
+        current_time = time.time()
+        success, frame = self.capture.read()
+        if not success:
+            print("Failed to capture frame")
+            return
 
-        self.diameter_plot = self.add_plots()
-        self.target_diameter = self.add_diameter_controls()  # QDoubleSpinBox
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        height, _, _ = frame.shape
+        frame = frame[height//4:3*height//4, :]
+        edges, binary_frame = self.get_edges(frame)
+        detected_lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 30, minLineLength=30, maxLineGap=100)
+        fiber_diameter = self.get_fiber_diameter(detected_lines)
+        frame = self.plot_lines(frame, detected_lines)
 
-        self.csv_filename = QLineEdit("Enter a file name")
-        self.layout.addWidget(self.csv_filename, 18, 0, 1, 3)  # 1行3列（480x50）
-
-        self.fiber_camera = FiberCamera(self.target_diameter, self)
-        if self.fiber_camera.diameter_coefficient == -1:
-            self.show_message("Camera calibration data not found", "Please calibrate the camera.")
-            self.fiber_camera.diameter_coefficient = 0.00782324
-
-        # 让两个视频控件宽度与plot一致（4列640px）
-        self.layout.addWidget(self.fiber_camera.raw_image, 2, 4, 6, 4)      # 6行4列（640x300）
-        self.layout.addWidget(self.fiber_camera.processed_image, 8, 4, 6, 4) # 6行4列（640x300）
-
-        self.add_buttons()
-
-        # 均匀分布所有列和行
-        for col in range(10):
-            self.layout.setColumnStretch(col, 1)
-        for row in range(20):
-            self.layout.setRowStretch(row, 1)
-
-        self.window.setLayout(self.layout)
-        self.window.setWindowTitle("MIT FrED")
-        self.window.setGeometry(100, 100, 1600, 1000)
-        self.window.setFixedSize(1600, 1000)
-        self.window.setAutoFillBackground(True)
-
-    def add_plots(self):
-        diameter_plot = self.Plot("Diameter", "Diameter (mm)")
-        self.layout.addWidget(diameter_plot, 2, 0, 8, 4)  # 8行4列（640x400）
-        return diameter_plot
-
-    def add_diameter_controls(self):
-        label = QLabel("Target Diameter (mm)")
-        label.setStyleSheet("font-size: 16px; font-weight: bold;")
-        spin = QDoubleSpinBox()
-        spin.setRange(0.3, 0.6)
-        spin.setValue(0.35)
-        spin.setSingleStep(0.01)
-        spin.setDecimals(2)
-        self.layout.addWidget(label, 16, 9)
-        self.layout.addWidget(spin, 17, 9)
-        return spin
-
-    def add_buttons(self):
-        self.create_button("Start Motor (Default 30RPM)", self.set_motor_close_loop, 1, 6, "motor_button")
-        self.create_button("Start Ploting", self.set_camera_feedback, 1, 9)
-        self.create_button("Start Heater (Default 95C)", self.set_start_device, 2, 6)
-        # 删除了“Calibrate motor”按钮
-        self.create_button("Calibrate camera", self.set_calibrate_camera, 1, 2)
-        self.create_button("Download CSV File", self.set_download_csv, 19, 6)
-        self.create_button("Exit", self.exit_program, 19, 9)
-
-    def create_button(self, text, handler, row, col, obj_attr_name=None):
-        btn = QPushButton(text)
-        btn.setStyleSheet("background-color: green; font-size: 14px; font-weight: bold;")
-        btn.clicked.connect(handler)
-        self.layout.addWidget(btn, row, col)
-        if obj_attr_name:
-            setattr(self, obj_attr_name, btn)
-
-    def start_gui(self) -> None:
-        timer = QTimer()
-        timer.timeout.connect(self.fiber_camera.camera_loop)
-        timer.start(200)
-        self.window.show()
-        self.app.exec_()
-
-    def set_motor_close_loop(self) -> None:
-        self.dc_motor_close_loop_enabled = not self.dc_motor_close_loop_enabled
-        if self.dc_motor_close_loop_enabled:
-            self.motor_button.setText("Stop Motor")
-            QMessageBox.information(self.window, "Motor Control", f"Motor closed loop started (setpoint={self.motor_setpoint}, Kp=0.4, Ki=0.2, Kd=0.05)")
+        # 数据记录
+        Database.camera_timestamps.append(current_time)
+        Database.diameter_readings.append(fiber_diameter)
+        if self.target_diameter is not None:
+            # target_diameter 是 QDoubleSpinBox
+            Database.diameter_setpoint.append(self.target_diameter.value())
         else:
-            self.motor_button.setText("Start Motor (Default 30RPM)")
-            QMessageBox.information(self.window, "Motor Control", "Motor closed loop stopped.")
+            Database.diameter_setpoint.append(0)
+        Database.diameter_delta_time.append(current_time - self.previous_time)
+        self.previous_time = current_time
 
-    def set_camera_feedback(self) -> None:
-        self.camera_feedback_enabled = not self.camera_feedback_enabled
-        msg = "started" if self.camera_feedback_enabled else "stopped"
-        QMessageBox.information(self.window, "Camera Feedback", f"Camera feedback {msg}.")
+        # 显示原图
+        image_for_gui = QImage(frame, frame.shape[1], frame.shape[0], QImage.Format_RGB888)
+        self.raw_image.setPixmap(QPixmap(image_for_gui))
 
-    def set_start_device(self) -> None:
-        self.device_started = True
-        QMessageBox.information(self.window, "Device Start", "Temperature closed loop started (setpoint=95, Kp=1.4, Ki=0.2, Kd=0.8, Fan=30%)")
+        # 显示Canny
+        image_for_gui = QImage(edges, edges.shape[1], edges.shape[0], QImage.Format_Grayscale8)
+        self.canny_image.setPixmap(QPixmap(image_for_gui))
 
-    # 删除了 set_calibrate_motor 方法
+        # 显示二值图
+        image_for_gui = QImage(binary_frame, binary_frame.shape[1], binary_frame.shape[0], QImage.Format_Grayscale8)
+        self.processed_image.setPixmap(QPixmap(image_for_gui))
 
-    def set_calibrate_camera(self) -> None:
-        QMessageBox.information(self.window, "Camera Calibration", "Camera is calibrating.")
-        self.fiber_camera.calibrate()
-        QMessageBox.information(self.window, "Calibration", "Camera calibration completed.")
+    def get_edges(self, frame: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """Filter the frame to enhance the edges"""
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+        kernel = np.ones((5,5), np.uint8)
+        frame = cv2.erode(frame, kernel, iterations=2)
+        frame = cv2.dilate(frame, kernel, iterations=2)
+        gaussian_blurred = cv2.GaussianBlur(frame, (5, 5), 0)
+        _, binary_frame = cv2.threshold(gaussian_blurred, 100, 255, cv2.THRESH_BINARY)
 
-    def set_download_csv(self) -> None:
-        QMessageBox.information(self.window, "Download CSV", "Downloading CSV file.")
-        Database.generate_csv(self.csv_filename.text())
+        if FiberCamera.use_binary_for_edges is False:
+            edges = cv2.Canny(frame, 100, 250, apertureSize=3)
+        else:
+            edges = cv2.Canny(binary_frame, 100, 250, apertureSize=3)
+        return edges, binary_frame
 
-    def exit_program(self) -> None:
-        self.window.close()
-        self.app.quit()
+    def get_fiber_diameter(self, lines):
+        """Get the fiber diameter from the edges detected in the image"""
+        leftmost_min = sys.maxsize
+        leftmost_max = 0
+        rightmost_min = sys.maxsize
+        rightmost_max = 0
+        if lines is None or len(lines) <= 1:
+            return 0
+        for line in lines:
+            x0, _, x1, _ = line[0]
+            leftmost_min = min(leftmost_min, x0, x1)
+            leftmost_max = max(leftmost_max, min(x0, x1))
+            rightmost_min = min(rightmost_min, max(x0, x1))
+            rightmost_max = max(rightmost_max, x0, x1)
+        # 线径像素差 × 标定系数
+        return (((leftmost_max - leftmost_min) + (rightmost_max - rightmost_min)) / 2 * self.diameter_coefficient)
 
-    def show_message(self, title: str, message: str) -> None:
-        QMessageBox.information(self.window, title, message)
+    def get_fiber_diameter_noC(self, lines):
+        """Get the fiber diameter from the edges detected in the image (未乘以系数)"""
+        leftmost_min = sys.maxsize
+        leftmost_max = 0
+        rightmost_min = sys.maxsize
+        rightmost_max = 0
+        if lines is None or len(lines) <= 1:
+            return 0
+        for line in lines:
+            x0, _, x1, _ = line[0]
+            leftmost_min = min(leftmost_min, x0, x1)
+            leftmost_max = max(leftmost_max, min(x0, x1))
+            rightmost_min = min(rightmost_min, max(x0, x1))
+            rightmost_max = max(rightmost_max, x0, x1)
+        return (((leftmost_max - leftmost_min) + (rightmost_max - rightmost_min)) / 2)
 
-    class Plot(FigureCanvas):
-        def __init__(self, title: str, y_label: str) -> None:
-            self.figure = Figure()
-            self.axes = self.figure.add_subplot(111)
-            super().__init__(self.figure)
-            self.axes.set_title(title)
-            self.axes.set_xlabel("Time (s)")
-            self.axes.set_ylabel(y_label)
-            self.progress_line, = self.axes.plot([], [], lw=2, label=title)
-            self.setpoint_line, = self.axes.plot([], [], lw=2, color='r', label=f'Target {title}')
-            self.axes.legend()
-            self.x_data = []
-            self.y_data = []
-            self.setpoint_data = []
+    def plot_lines(self, frame, lines):
+        """Plot the detected lines on the frame"""
+        if lines is not None:
+            for line in lines:
+                x0, y0, x1, y1 = line[0]
+                cv2.line(frame, (x0, y0), (x1, y1), (255, 0, 0), 2)
+        return frame
 
-        def update_plot(self, x: float, y: float, setpoint: float) -> None:
-            max_points = 100
-            self.x_data.append(x)
-            self.y_data.append(y)
-            self.setpoint_data.append(setpoint)
-            self.x_data = self.x_data[-max_points:]
-            self.y_data = self.y_data[-max_points:]
-            self.setpoint_data = self.setpoint_data[-max_points:]
-            self.progress_line.set_data(self.x_data, self.y_data)
-            self.setpoint_line.set_data(self.x_data, self.setpoint_data)
-            self.axes.relim()
-            self.axes.autoscale_view()
-            self.draw()
+    def calibrate(self):
+        """Calibrate the camera with user input diameter"""
+        num_samples = 50
+        accumulated_diameter = 0
+        valid_samples = 0
+
+        # 弹出输入框让用户输入实际线径（mm）
+        diameter_mm, ok = QInputDialog.getDouble(
+            self.gui.window,
+            "Calibrate Camera",
+            "Enter wire actual diameter (mm) for calibration",
+            decimals=4,
+            min=0.01,
+            max=100.0
+        )
+        if not ok:
+            return  # 用户取消
+
+        # 采集图像并测量像素宽度
+        for _ in range(num_samples):
+            success, frame = self.capture.read()
+            if not success:
+                continue
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            edges, _ = self.get_edges(frame)
+            detected_lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 30, minLineLength=30, maxLineGap=100)
+            fiber_diameter = self.get_fiber_diameter_noC(detected_lines)
+            if fiber_diameter > 0:
+                accumulated_diameter += fiber_diameter
+                valid_samples += 1
+
+        if valid_samples > 0:
+            average_diameter_px = accumulated_diameter / valid_samples
+        else:
+            average_diameter_px = 1  # 防止除零
+
+        # 计算像素到毫米的系数
+        self.diameter_coefficient = diameter_mm / average_diameter_px
+        Database.update_calibration_data("diameter_coefficient", str(self.diameter_coefficient))
+
+        # 标定完成提示
+        QMessageBox.information(self.gui.window, "Calibration", "Diameter calibration done.")
+
+    def camera_feedback(self, current_time: float) -> None:
+        try:
+            success, frame = self.capture.read()
+            if not success:
+                return
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            height, _, _ = frame.shape
+            frame = frame[height//4:3*height//4, :]
+            edges, binary_frame = self.get_edges(frame)
+            detected_lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 30, minLineLength=30, maxLineGap=100)
+            current_diameter = self.get_fiber_diameter(detected_lines)
+            if self.gui.diameter_plot:
+                self.gui.diameter_plot.update_plot(current_time, current_diameter, self.target_diameter.value())
+            Database.camera_timestamps.append(current_time)
+            Database.diameter_readings.append(current_diameter)
+            Database.diameter_setpoint.append(self.target_diameter.value())
+            Database.diameter_delta_time.append(current_time - self.previous_time)
+            self.previous_time = current_time
+        except Exception as e:
+            print(f"Error in camera feedback: {e}")
+
+    def closeEvent(self, event):
+        """Close the camera when the window is closed"""
+        self.capture.release()
+        event.accept()
