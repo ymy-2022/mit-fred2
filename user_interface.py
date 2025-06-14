@@ -26,22 +26,22 @@ class UserInterface:
         self.target_diameter = self.add_diameter_controls()  # QDoubleSpinBox
 
         self.csv_filename = QLineEdit("Enter a file name")
-        self.layout.addWidget(self.csv_filename, 24, 8)
+        self.layout.addWidget(self.csv_filename, 18, 0, 1, 3)  # 1行3列（480x50）
 
         self.fiber_camera = FiberCamera(self.target_diameter, self)
         if self.fiber_camera.diameter_coefficient == -1:
             self.show_message("Camera calibration data not found", "Please calibrate the camera.")
             self.fiber_camera.diameter_coefficient = 0.00782324
 
-        self.layout.addWidget(self.fiber_camera.raw_image, 2, 8, 6, 1)
-        self.layout.addWidget(self.fiber_camera.processed_image, 9, 8, 6, 1)
+        self.layout.addWidget(self.fiber_camera.raw_image, 2, 4, 6, 2)      # 6行2列（320x300）
+        self.layout.addWidget(self.fiber_camera.processed_image, 8, 4, 6, 2) # 6行2列（320x300）
 
         self.add_buttons()
 
         # 均匀分布所有列和行
-        for col in range(10):  # 你的最大列号+1
+        for col in range(10):
             self.layout.setColumnStretch(col, 1)
-        for row in range(25):  # 你的最大行号+1
+        for row in range(20):
             self.layout.setRowStretch(row, 1)
 
         self.window.setLayout(self.layout)
@@ -52,7 +52,7 @@ class UserInterface:
 
     def add_plots(self):
         diameter_plot = self.Plot("Diameter", "Diameter (mm)")
-        self.layout.addWidget(diameter_plot, 2, 0, 8, 4)
+        self.layout.addWidget(diameter_plot, 2, 0, 8, 4)  # 8行4列（640x400）
         return diameter_plot
 
     def add_diameter_controls(self):
@@ -73,8 +73,8 @@ class UserInterface:
         self.create_button("Start Heater (Default 95C)", self.set_start_device, 2, 6)
         # 删除了“Calibrate motor”按钮
         self.create_button("Calibrate camera", self.set_calibrate_camera, 1, 2)
-        self.create_button("Download CSV File", self.set_download_csv, 24, 6)
-        self.create_button("Exit", self.exit_program, 24, 9)
+        self.create_button("Download CSV File", self.set_download_csv, 19, 6)
+        self.create_button("Exit", self.exit_program, 19, 9)
 
     def create_button(self, text, handler, row, col, obj_attr_name=None):
         btn = QPushButton(text)
