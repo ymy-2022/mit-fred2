@@ -1,8 +1,7 @@
 from PyQt5.QtWidgets import (
-    QApplication, QWidget, QGridLayout, QLabel, QDoubleSpinBox, QSlider,
-    QPushButton, QMessageBox, QLineEdit
+    QApplication, QWidget, QGridLayout, QLabel, QPushButton, QMessageBox, QLineEdit
 )
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtCore import QTimer
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
@@ -20,19 +19,11 @@ class UserInterface:
         self.camera_feedback_enabled = False
         self.dc_motor_close_loop_enabled = False
 
-        # motor_setpoint 只作为 float 用
+        # motor_setpoint 直接写死（比如30.0）
         self.motor_setpoint = 30.0
 
         self.diameter_plot = self.add_plots()
         self.target_diameter = self.add_diameter_controls()
-        self.extrusion_motor_speed = self.add_motor_controls()
-        self.target_temperature_label, self.target_temperature = self.add_temperature_controls()
-        self.fan_duty_cycle_label, self.fan_duty_cycle = self.add_fan_controls()
-
-        self.target_temperature_label.hide()
-        self.target_temperature.hide()
-        self.fan_duty_cycle_label.hide()
-        self.fan_duty_cycle.hide()
 
         self.csv_filename = QLineEdit("Enter a file name")
         self.layout.addWidget(self.csv_filename, 24, 8)
@@ -61,48 +52,26 @@ class UserInterface:
     def add_diameter_controls(self):
         label = QLabel("Target Diameter (mm)")
         label.setStyleSheet("font-size: 16px; font-weight: bold;")
-        spin = QDoubleSpinBox()
-        spin.setRange(0.3, 0.6)
-        spin.setValue(0.35)
-        spin.setSingleStep(0.01)
-        spin.setDecimals(2)
+        # 这里保留直径设定控件，如果不需要可以注释掉
+        # spin = QDoubleSpinBox()
+        # spin.setRange(0.3, 0.6)
+        # spin.setValue(0.35)
+        # spin.setSingleStep(0.01)
+        # spin.setDecimals(2)
+        # self.layout.addWidget(label, 16, 9)
+        # self.layout.addWidget(spin, 17, 9)
+        # return spin
         self.layout.addWidget(label, 16, 9)
-        self.layout.addWidget(spin, 17, 9)
-        return spin
+        return None
 
-    def add_motor_controls(self):
-        label = QLabel("Extrusion Motor Speed (RPM)")
-        label.setStyleSheet("font-size: 16px; font-weight: bold;")
-        spin = QDoubleSpinBox()
-        spin.setRange(0.0, 20.0)
-        spin.setValue(0.0)
-        spin.setSingleStep(0.1)
-        spin.setDecimals(2)
-        self.layout.addWidget(label, 11, 6)
-        self.layout.addWidget(spin, 12, 6)
-        return spin
-
-    def add_temperature_controls(self):
-        label = QLabel("Temperature Setpoint(C)")
-        label.setStyleSheet("font-size: 16px; font-weight: bold;")
-        slider = QSlider(Qt.Horizontal)
-        slider.setRange(65, 105)
-        slider.setValue(95)
-        slider.valueChanged.connect(self.update_temperature_slider_label)
-        self.layout.addWidget(label, 14, 6)
-        self.layout.addWidget(slider, 15, 6)
-        return label, slider
-
-    def add_fan_controls(self):
-        label = QLabel("Fan Duty Cycle (%)")
-        label.setStyleSheet("font-size: 14px; font-weight: bold;")
-        slider = QSlider(Qt.Horizontal)
-        slider.setRange(0, 100)
-        slider.setValue(30)
-        slider.valueChanged.connect(self.update_fan_slider_label)
-        self.layout.addWidget(label, 22, 6)
-        self.layout.addWidget(slider, 23, 6)
-        return label, slider
+    def add_buttons(self):
+        self.create_button("Start Motor (Default 30RPM)", self.set_motor_close_loop, 1, 6, "motor_button")
+        self.create_button("Start Ploting", self.set_camera_feedback, 1, 9)
+        self.create_button("Start Heater (Default 95C)", self.set_start_device, 2, 6)
+        self.create_button("Calibrate motor", self.set_calibrate_motor, 1, 1)
+        self.create_button("Calibrate camera", self.set_calibrate_camera, 1, 2)
+        self.create_button("Download CSV File", self.set_download_csv, 24, 6)
+        self.create_button("Exit", self.exit_program, 24, 9)
 
     def create_button(self, text, handler, row, col, obj_attr_name=None):
         btn = QPushButton(text)
@@ -111,15 +80,6 @@ class UserInterface:
         self.layout.addWidget(btn, row, col)
         if obj_attr_name:
             setattr(self, obj_attr_name, btn)
-
-    def add_buttons(self):
-        self.create_button("Start Ploting", self.set_camera_feedback, 1, 9)
-        self.create_button("Start Motor (Default 30RPM)", self.set_motor_close_loop, 1, 6, "motor_button")
-        self.create_button("Start Heater (Default 95C)", self.set_start_device, 2, 6)
-        self.create_button("Calibrate motor", self.set_calibrate_motor, 1, 1)
-        self.create_button("Calibrate camera", self.set_calibrate_camera, 1, 2)
-        self.create_button("Download CSV File", self.set_download_csv, 24, 6)
-        self.create_button("Exit", self.exit_program, 24, 9)
 
     def start_gui(self) -> None:
         timer = QTimer()
@@ -132,18 +92,11 @@ class UserInterface:
         self.dc_motor_close_loop_enabled = not self.dc_motor_close_loop_enabled
         if self.dc_motor_close_loop_enabled:
             self.motor_button.setText("Stop Motor")
-            # motor_setpoint 赋值为当前界面设定值
-            self.motor_setpoint = self.extrusion_motor_speed.value()
+            # motor_setpoint 直接用默认值，无需再取控件值
             QMessageBox.information(self.window, "Motor Control", f"Motor closed loop started (setpoint={self.motor_setpoint}, Kp=0.4, Ki=0.2, Kd=0.05)")
         else:
             self.motor_button.setText("Start Motor (Default 30RPM)")
             QMessageBox.information(self.window, "Motor Control", "Motor closed loop stopped.")
-
-    def update_temperature_slider_label(self, value) -> None:
-        self.target_temperature_label.setText(f"Temperature: {value} C")
-
-    def update_fan_slider_label(self, value) -> None:
-        self.fan_duty_cycle_label.setText(f"Fan Duty Cycle: {value} %")
 
     def set_camera_feedback(self) -> None:
         self.camera_feedback_enabled = not self.camera_feedback_enabled
