@@ -40,7 +40,7 @@ class UserInterface:
 
         # 让两个视频控件宽度与plot一致（4列640px）
         self.layout.addWidget(self.fiber_camera.raw_image, 8, 0, 6, 4)      # 6行4列（640x300）
-        self.layout.addWidget(self.fiber_camera.processed_image, 8, 4, 6, 4) # 6行4列（640x300）
+        self.layout.addWidget(self.fiber_camera.processed_image, 12, 4, 6, 4) # 6行4列（640x300）
 
         self.add_buttons()
 
@@ -137,7 +137,7 @@ class UserInterface:
             self.figure = Figure()
             self.axes = self.figure.add_subplot(111)
             super().__init__(self.figure)
-            self.figure.subplots_adjust(top=0.95)  # 裁掉title上方白边
+            self.figure.subplots_adjust(top=0.9)  # 裁掉title上方白边
             self.axes.set_title(title)
             self.axes.set_xlabel("Time (s)")
             self.axes.set_ylabel(y_label)
