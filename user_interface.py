@@ -45,7 +45,7 @@ class UserInterface:
         
         # 让两个视频控件宽度与plot一致（4列640px）
         self.layout.addWidget(self.fiber_camera.raw_image, 8, 0, 6, 4)      # 6行4列（640x300）
-        self.layout.addWidget(self.fiber_camera.processed_image, 13, 0, 5, 4) # 6行4列（640x300）
+        self.layout.addWidget(self.fiber_camera.processed_image, 13, 0, 7, 4) # 6行4列（640x300）
 
         self.add_buttons()
 
@@ -83,7 +83,7 @@ class UserInterface:
         self.create_button("Start Ploting", self.set_camera_feedback, 0, 9)
         self.create_button("Start Heater (Default 95C)", self.set_start_device, 2, 6)
         self.create_button("Calibrate camera", self.set_calibrate_camera, 0, 5)
-        self.create_button("Download CSV File", self.set_download_csv, 19, 6)
+        self.create_button("Download CSV File", self.set_download_csv, 19, 7)
         self.create_button("Exit", self.exit_program, 19, 9)
 
     def create_button(self, text, handler, row, col, obj_attr_name=None):
