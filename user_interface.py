@@ -43,6 +43,7 @@ class UserInterface:
         Processed_image_label.setStyleSheet("font-weight: bold; font-size: 14px;")
         Processed_image_label.setContentsMargins(0, 0, 0, -5)  # 让标签更贴近下方
         self.layout.addWidget(Processed_image_label, 13, 0, 1, 4)  # 1行4列，与 processed_image 对齐
+        self.layout.setVerticalSpacing(0)
         
         # 让两个视频控件宽度与plot一致（4列640px）
         self.layout.addWidget(self.fiber_camera.raw_image, 8, 0, 6, 4)      # 6行4列（640x300）
