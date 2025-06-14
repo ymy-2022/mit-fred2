@@ -26,7 +26,7 @@ class UserInterface:
         self.target_diameter = self.add_diameter_controls()  # QDoubleSpinBox
 
         self.csv_filename = QLineEdit("Enter a file name")
-        self.layout.addWidget(self.csv_filename, 18, 5, 1, 2) 
+        self.layout.addWidget(self.csv_filename, 18, 6, 1, 2) 
 
         self.fiber_camera = FiberCamera(self.target_diameter, self)
         if self.fiber_camera.diameter_coefficient == -1:
