@@ -15,7 +15,7 @@ class UserInterface:
         self.layout = QGridLayout()
 
         self.device_started = False
-        self.start_motor_calibration = False
+        self.start_motor_calibration = False  # 可保留但无实际用处
         self.camera_feedback_enabled = False
         self.dc_motor_close_loop_enabled = False
 
@@ -23,7 +23,7 @@ class UserInterface:
         self.motor_setpoint = 30.0
 
         self.diameter_plot = self.add_plots()
-        self.target_diameter = self.add_diameter_controls()  # 现在是 QDoubleSpinBox
+        self.target_diameter = self.add_diameter_controls()  # QDoubleSpinBox
 
         self.csv_filename = QLineEdit("Enter a file name")
         self.layout.addWidget(self.csv_filename, 24, 8)
@@ -65,7 +65,7 @@ class UserInterface:
         self.create_button("Start Motor (Default 30RPM)", self.set_motor_close_loop, 1, 6, "motor_button")
         self.create_button("Start Ploting", self.set_camera_feedback, 1, 9)
         self.create_button("Start Heater (Default 95C)", self.set_start_device, 2, 6)
-        self.create_button("Calibrate motor", self.set_calibrate_motor, 1, 1)
+        # 删除了“Calibrate motor”按钮
         self.create_button("Calibrate camera", self.set_calibrate_camera, 1, 2)
         self.create_button("Download CSV File", self.set_download_csv, 24, 6)
         self.create_button("Exit", self.exit_program, 24, 9)
@@ -103,9 +103,7 @@ class UserInterface:
         self.device_started = True
         QMessageBox.information(self.window, "Device Start", "Temperature closed loop started (setpoint=95, Kp=1.4, Ki=0.2, Kd=0.8, Fan=30%)")
 
-    def set_calibrate_motor(self) -> None:
-        self.start_motor_calibration = True
-        QMessageBox.information(self.window, "Motor Calibration", "Motor is calibrating.")
+    # 删除了 set_calibrate_motor 方法
 
     def set_calibrate_camera(self) -> None:
         QMessageBox.information(self.window, "Camera Calibration", "Camera is calibrating.")
