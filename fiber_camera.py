@@ -133,7 +133,7 @@ class FiberCamera(QWidget):
         diameter_mm, ok = QInputDialog.getDouble(
             self.gui.window,
             "Calibrate Camera",
-            "请输入你用于标定的线的实际直径 (mm):",
+            "Enter wire actual diameter (mm) for calibration",
             decimals=4,
             min=0.01,
             max=100.0
