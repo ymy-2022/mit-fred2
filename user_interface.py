@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import (
-    QApplication, QWidget, QGridLayout, QLabel, QPushButton, QMessageBox, QLineEdit
+    QApplication, QWidget, QGridLayout, QLabel, QDoubleSpinBox, QPushButton, QMessageBox, QLineEdit
 )
 from PyQt5.QtCore import QTimer
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -23,7 +23,7 @@ class UserInterface:
         self.motor_setpoint = 30.0
 
         self.diameter_plot = self.add_plots()
-        self.target_diameter = self.add_diameter_controls()
+        self.target_diameter = self.add_diameter_controls()  # 现在是 QDoubleSpinBox
 
         self.csv_filename = QLineEdit("Enter a file name")
         self.layout.addWidget(self.csv_filename, 24, 8)
@@ -52,17 +52,14 @@ class UserInterface:
     def add_diameter_controls(self):
         label = QLabel("Target Diameter (mm)")
         label.setStyleSheet("font-size: 16px; font-weight: bold;")
-        # 这里保留直径设定控件，如果不需要可以注释掉
-        # spin = QDoubleSpinBox()
-        # spin.setRange(0.3, 0.6)
-        # spin.setValue(0.35)
-        # spin.setSingleStep(0.01)
-        # spin.setDecimals(2)
-        # self.layout.addWidget(label, 16, 9)
-        # self.layout.addWidget(spin, 17, 9)
-        # return spin
+        spin = QDoubleSpinBox()
+        spin.setRange(0.3, 0.6)
+        spin.setValue(0.35)
+        spin.setSingleStep(0.01)
+        spin.setDecimals(2)
         self.layout.addWidget(label, 16, 9)
-        return None
+        self.layout.addWidget(spin, 17, 9)
+        return spin
 
     def add_buttons(self):
         self.create_button("Start Motor (Default 30RPM)", self.set_motor_close_loop, 1, 6, "motor_button")
@@ -92,7 +89,6 @@ class UserInterface:
         self.dc_motor_close_loop_enabled = not self.dc_motor_close_loop_enabled
         if self.dc_motor_close_loop_enabled:
             self.motor_button.setText("Stop Motor")
-            # motor_setpoint 直接用默认值，无需再取控件值
             QMessageBox.information(self.window, "Motor Control", f"Motor closed loop started (setpoint={self.motor_setpoint}, Kp=0.4, Ki=0.2, Kd=0.05)")
         else:
             self.motor_button.setText("Start Motor (Default 30RPM)")
