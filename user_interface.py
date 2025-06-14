@@ -20,6 +20,9 @@ class UserInterface:
         self.camera_feedback_enabled = False
         self.dc_motor_close_loop_enabled = False
 
+        # motor_setpoint 用于兼容旧代码，实际可用 extrusion_motor_speed.value()
+        self.motor_setpoint = 30
+
         self.diameter_plot = self.add_plots()
         self.target_diameter = self.add_diameter_controls()
         self.extrusion_motor_speed = self.add_motor_controls()
@@ -129,7 +132,9 @@ class UserInterface:
         self.dc_motor_close_loop_enabled = not self.dc_motor_close_loop_enabled
         if self.dc_motor_close_loop_enabled:
             self.motor_button.setText("Stop Motor")
-            QMessageBox.information(self.window, "Motor Control", "Motor closed loop started (setpoint=30, Kp=0.4, Ki=0.2, Kd=0.05)")
+            # motor_setpoint 赋值为当前界面设定值
+            self.motor_setpoint = self.extrusion_motor_speed.value()
+            QMessageBox.information(self.window, "Motor Control", f"Motor closed loop started (setpoint={self.motor_setpoint}, Kp=0.4, Ki=0.2, Kd=0.05)")
         else:
             self.motor_button.setText("Start Motor (Default 30RPM)")
             QMessageBox.information(self.window, "Motor Control", "Motor closed loop stopped.")
