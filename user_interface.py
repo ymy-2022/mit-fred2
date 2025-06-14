@@ -26,7 +26,7 @@ class UserInterface:
         self.target_diameter = self.add_diameter_controls()  # QDoubleSpinBox
 
         self.csv_filename = QLineEdit("Enter a file name")
-        self.layout.addWidget(self.csv_filename, 18, 0, 1, 3)  # 1行3列（480x50）
+        self.layout.addWidget(self.csv_filename, 18, 5, 1, 2) 
 
         self.fiber_camera = FiberCamera(self.target_diameter, self)
         if self.fiber_camera.diameter_coefficient == -1:
@@ -40,7 +40,7 @@ class UserInterface:
 
         # 让两个视频控件宽度与plot一致（4列640px）
         self.layout.addWidget(self.fiber_camera.raw_image, 8, 0, 6, 4)      # 6行4列（640x300）
-        self.layout.addWidget(self.fiber_camera.processed_image, 12, 4, 6, 4) # 6行4列（640x300）
+        self.layout.addWidget(self.fiber_camera.processed_image, 14, 4, 6, 4) # 6行4列（640x300）
 
         self.add_buttons()
 
@@ -137,7 +137,7 @@ class UserInterface:
             self.figure = Figure()
             self.axes = self.figure.add_subplot(111)
             super().__init__(self.figure)
-            self.figure.subplots_adjust(top=0.9)  # 裁掉title上方白边
+            self.figure.subplots_adjust(top=0.92)  # 裁掉title上方白边
             self.axes.set_title(title)
             self.axes.set_xlabel("Time (s)")
             self.axes.set_ylabel(y_label)
