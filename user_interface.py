@@ -37,7 +37,12 @@ class UserInterface:
         raw_image_label = QLabel("Raw Image:")
         raw_image_label.setStyleSheet("font-weight: bold; font-size: 14px;")
         self.layout.addWidget(raw_image_label, 8, 0, 1, 4)  # 1行4列，与 raw_image 对齐
-
+        
+        # 添加 Processed Image 标签，紧贴 plot 下方
+        raw_image_label = QLabel("Processed Image:")
+        raw_image_label.setStyleSheet("font-weight: bold; font-size: 14px;")
+        self.layout.addWidget(raw_image_label, 14, 0, 1, 4)  # 1行4列，与 processed_image 对齐
+        
         # 让两个视频控件宽度与plot一致（4列640px）
         self.layout.addWidget(self.fiber_camera.raw_image, 8, 0, 6, 4)      # 6行4列（640x300）
         self.layout.addWidget(self.fiber_camera.processed_image, 14, 0, 6, 4) # 6行4列（640x300）
