@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QGridLayout, QLabel, QDoubleSpinBox, QSlider,
-    QPushButton, QMessageBox, QLineEdit, QCheckBox
+    QPushButton, QMessageBox, QLineEdit
 )
 from PyQt5.QtCore import QTimer, Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -20,8 +20,8 @@ class UserInterface:
         self.camera_feedback_enabled = False
         self.dc_motor_close_loop_enabled = False
 
-        # motor_setpoint 用于兼容旧代码，实际可用 extrusion_motor_speed.value()
-        self.motor_setpoint = 30
+        # motor_setpoint 只作为 float 用
+        self.motor_setpoint = 30.0
 
         self.diameter_plot = self.add_plots()
         self.target_diameter = self.add_diameter_controls()
