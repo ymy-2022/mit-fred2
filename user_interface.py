@@ -62,7 +62,7 @@ class UserInterface:
         self.window.setAutoFillBackground(True)
 
     def add_plots(self):
-        diameter_plot = self.Plot("Diameter VS. Time Plot", "Diameter (mm)")
+        diameter_plot = self.Plot("Diameter", "Diameter (mm)")
         self.layout.addWidget(diameter_plot, 0, 0, 8, 4)  # 8行4列（640x400）
         return diameter_plot
 
