@@ -32,27 +32,20 @@ def hardware_control(gui: UserInterface) -> None:
             if gui.start_motor_calibration:
                 spooler.calibrate()
                 gui.start_motor_calibration = False
-                
-            # DC Motor Control Logic
-            if gui.dc_motor_open_loop_enabled and not gui.dc_motor_close_loop_enabled:
-                spooler.dc_motor_open_loop_control(current_time)
-                
-            elif gui.dc_motor_close_loop_enabled and not gui.dc_motor_open_loop_enabled:
+
+            # 仅保留闭环直流电机控制
+            if gui.dc_motor_close_loop_enabled:
                 spooler.dc_motor_close_loop_control(current_time)
-            
-            # Heater Control Logic
-            if gui.heater_open_loop_enabled and not gui.device_started:  
-                extruder.temperature_open_loop_control(current_time)     
-                extruder.stepper_control_loop()
-            
-            # Camera Feedback PLOT OPEN LOOP
-            if gui.camera_feedback_enabled:
-                gui.fiber_camera.camera_feedback(current_time)
-                            
-            elif gui.device_started:
+
+            # 仅保留闭环加热器控制
+            if gui.device_started:
                 extruder.temperature_control_loop(current_time)
                 extruder.stepper_control_loop()
-                
+
+            # 相机反馈绘图
+            if gui.camera_feedback_enabled:
+                gui.fiber_camera.camera_feedback(current_time)
+
             fan.control_loop()
             time.sleep(0.05)
         except Exception as e:
@@ -73,4 +66,3 @@ if __name__ == "__main__":
     ui.start_gui()
     hardware_thread.join()
     print("FrED Device Closed.")
-
