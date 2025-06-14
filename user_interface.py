@@ -38,6 +38,12 @@ class UserInterface:
 
         self.add_buttons()
 
+        # 均匀分布所有列和行
+        for col in range(10):  # 你的最大列号+1
+            self.layout.setColumnStretch(col, 1)
+        for row in range(25):  # 你的最大行号+1
+            self.layout.setRowStretch(row, 1)
+
         self.window.setLayout(self.layout)
         self.window.setWindowTitle("MIT FrED")
         self.window.setGeometry(100, 100, 1600, 1000)
