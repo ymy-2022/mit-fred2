@@ -26,7 +26,7 @@ class UserInterface:
         self.target_diameter = self.add_diameter_controls()  # QDoubleSpinBox
 
         self.csv_filename = QLineEdit("Enter a file name")
-        self.layout.addWidget(self.csv_filename, 18, 6, 1, 2) 
+        self.layout.addWidget(self.csv_filename, 19, 6, 1, 2) 
 
         self.fiber_camera = FiberCamera(self.target_diameter, self)
         if self.fiber_camera.diameter_coefficient == -1:
@@ -83,7 +83,7 @@ class UserInterface:
         self.create_button("Start Ploting", self.set_camera_feedback, 0, 9)
         self.create_button("Start Heater (Default 95C)", self.set_start_device, 2, 6)
         self.create_button("Calibrate camera", self.set_calibrate_camera, 0, 5)
-        self.create_button("Download CSV File", self.set_download_csv, 19, 6)
+        self.create_button("Download CSV File", self.set_download_csv, 19, 5)
         self.create_button("Exit", self.exit_program, 19, 9)
 
     def create_button(self, text, handler, row, col, obj_attr_name=None):
