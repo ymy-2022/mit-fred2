@@ -23,9 +23,7 @@ class UserInterface:
         self.motor_setpoint = 30.0
 
         self.diameter_plot = self.add_plots()
-
-        # 不再创建 target diameter 控件
-        self.target_diameter = None  # 保持接口一致，但不生成控件
+        self.target_diameter = self.add_diameter_controls()
 
         self.csv_filename = QLineEdit("Enter a file name")
         self.layout.addWidget(self.csv_filename, 19, 5, 1, 2)
@@ -96,6 +94,18 @@ class UserInterface:
         diameter_plot = self.Plot("Diameter", "Diameter (mm)")
         self.layout.addWidget(diameter_plot, 0, 0, 8, 4)
         return diameter_plot
+
+    def add_diameter_controls(self):
+        label = QLabel("Target Diameter (mm)")
+        label.setStyleSheet("font-size: 16px; font-weight: bold;")
+        spin = QDoubleSpinBox()
+        spin.setRange(0.3, 0.6)
+        spin.setValue(0.35)
+        spin.setSingleStep(0.01)
+        spin.setDecimals(2)
+        self.layout.addWidget(label, 16, 9)
+        self.layout.addWidget(spin, 17, 9)
+        return spin
 
     def add_buttons(self):
         self.create_button("Start Motor (Default 30RPM)", self.set_motor_close_loop, 0, 6, "motor_button")
