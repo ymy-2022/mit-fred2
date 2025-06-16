@@ -16,15 +16,14 @@ class UserInterface:
         self.layout = QGridLayout()
 
         self.device_started = False
-        self.start_motor_calibration = False  # 可保留但无实际用处
+        self.start_motor_calibration = False
         self.camera_feedback_enabled = False
         self.dc_motor_close_loop_enabled = False
 
-        # motor_setpoint 直接写死（比如30.0）
         self.motor_setpoint = 30.0
 
         self.diameter_plot = self.add_plots()
-        self.target_diameter = self.add_diameter_controls()  # QDoubleSpinBox
+        self.target_diameter = self.add_diameter_controls()
 
         self.csv_filename = QLineEdit("Enter a file name")
         self.layout.addWidget(self.csv_filename, 19, 5, 1, 2)
@@ -34,29 +33,40 @@ class UserInterface:
             self.show_message("Camera calibration data not found", "Please calibrate the camera.")
             self.fiber_camera.diameter_coefficient = 0.00782324
 
-        # 添加 Raw Image 标签，紧贴 plot 下方
         raw_image_label = QLabel("Raw Image:")
         raw_image_label.setStyleSheet("font-weight: bold; font-size: 14px;")
-        self.layout.addWidget(raw_image_label, 8, 0, 1, 4)  # 1行4列，与 raw_image 对齐
+        self.layout.addWidget(raw_image_label, 8, 0, 1, 4)
 
-        # 添加 Processed Image 标签，紧贴 plot 上方
         processed_image_label = QLabel("Processed Image:")
         processed_image_label.setStyleSheet("font-weight: bold; font-size: 14px;")
-        self.layout.addWidget(processed_image_label, 13, 0, 1, 4)  # 1行4列，与 processed_image 对齐
+        self.layout.addWidget(processed_image_label, 13, 0, 1, 4)
 
-        # 让两个视频控件宽度与plot一致（4列640px）
-        self.layout.addWidget(self.fiber_camera.raw_image, 8, 0, 6, 4)      # 6行4列（640x300）
-        self.layout.addWidget(self.fiber_camera.processed_image, 13, 0, 7, 4) # 7行4列（640x300）
+        self.layout.addWidget(self.fiber_camera.raw_image, 8, 0, 6, 4)
+        self.layout.addWidget(self.fiber_camera.processed_image, 13, 0, 7, 4)
 
         self.add_buttons()
 
-        # 新增：添加 Erode 滤波开关 QCheckBox
+        # 多滤波器 Toggle 控件
         self.erode_checkbox = QCheckBox("Enable Erode Filter")
-        self.erode_checkbox.setChecked(True)  # 默认开启
+        self.erode_checkbox.setChecked(True)
         self.erode_checkbox.stateChanged.connect(self.toggle_erode_filter)
         self.layout.addWidget(self.erode_checkbox, 18, 5, 1, 2)
 
-        # 均匀分布所有列和行
+        self.dilate_checkbox = QCheckBox("Enable Dilate Filter")
+        self.dilate_checkbox.setChecked(True)
+        self.dilate_checkbox.stateChanged.connect(self.toggle_dilate_filter)
+        self.layout.addWidget(self.dilate_checkbox, 18, 7, 1, 2)
+
+        self.gaussian_checkbox = QCheckBox("Enable Gaussian Blur")
+        self.gaussian_checkbox.setChecked(True)
+        self.gaussian_checkbox.stateChanged.connect(self.toggle_gaussian_filter)
+        self.layout.addWidget(self.gaussian_checkbox, 18, 9, 1, 2)
+
+        self.binary_checkbox = QCheckBox("Enable Binary Threshold")
+        self.binary_checkbox.setChecked(True)
+        self.binary_checkbox.stateChanged.connect(self.toggle_binary_filter)
+        self.layout.addWidget(self.binary_checkbox, 18, 11, 1, 2)
+
         for col in range(10):
             self.layout.setColumnStretch(col, 1)
         for row in range(20):
@@ -69,12 +79,20 @@ class UserInterface:
         self.window.setAutoFillBackground(True)
 
     def toggle_erode_filter(self, state):
-        # QCheckBox 选中时 state==2，未选中时 state==0
         FiberCamera.use_erode = (state == 2)
+
+    def toggle_dilate_filter(self, state):
+        FiberCamera.use_dilate = (state == 2)
+
+    def toggle_gaussian_filter(self, state):
+        FiberCamera.use_gaussian = (state == 2)
+
+    def toggle_binary_filter(self, state):
+        FiberCamera.use_binary = (state == 2)
 
     def add_plots(self):
         diameter_plot = self.Plot("Diameter", "Diameter (mm)")
-        self.layout.addWidget(diameter_plot, 0, 0, 8, 4)  # 8行4列（640x400）
+        self.layout.addWidget(diameter_plot, 0, 0, 8, 4)
         return diameter_plot
 
     def add_diameter_controls(self):
@@ -151,7 +169,7 @@ class UserInterface:
             self.figure = Figure()
             self.axes = self.figure.add_subplot(111)
             super().__init__(self.figure)
-            self.figure.subplots_adjust(top=0.92)  # 裁掉title上方白边
+            self.figure.subplots_adjust(top=0.92)
             self.axes.set_title(title)
             self.axes.set_xlabel("Time (s)")
             self.axes.set_ylabel(y_label)
