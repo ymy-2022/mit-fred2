@@ -50,22 +50,22 @@ class UserInterface:
         self.erode_checkbox = QCheckBox("Enable Erode Filter")
         self.erode_checkbox.setChecked(True)
         self.erode_checkbox.stateChanged.connect(self.toggle_erode_filter)
-        self.layout.addWidget(self.erode_checkbox, 18, 5, 1, 2)
+        self.layout.addWidget(self.erode_checkbox, 10, 5, 1, 2)
 
         self.dilate_checkbox = QCheckBox("Enable Dilate Filter")
         self.dilate_checkbox.setChecked(True)
         self.dilate_checkbox.stateChanged.connect(self.toggle_dilate_filter)
-        self.layout.addWidget(self.dilate_checkbox, 18, 7, 1, 2)
+        self.layout.addWidget(self.dilate_checkbox, 11, 5, 1, 2)
 
         self.gaussian_checkbox = QCheckBox("Enable Gaussian Blur")
         self.gaussian_checkbox.setChecked(True)
         self.gaussian_checkbox.stateChanged.connect(self.toggle_gaussian_filter)
-        self.layout.addWidget(self.gaussian_checkbox, 18, 9, 1, 2)
+        self.layout.addWidget(self.gaussian_checkbox, 12, 5, 1, 2)
 
         self.binary_checkbox = QCheckBox("Enable Binary Threshold")
         self.binary_checkbox.setChecked(True)
         self.binary_checkbox.stateChanged.connect(self.toggle_binary_filter)
-        self.layout.addWidget(self.binary_checkbox, 18, 11, 1, 2)
+        self.layout.addWidget(self.binary_checkbox, 13, 5, 1, 2)
 
         for col in range(10):
             self.layout.setColumnStretch(col, 1)
