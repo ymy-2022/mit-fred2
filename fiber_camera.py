@@ -28,6 +28,8 @@ class FiberCamera(QWidget):
         self.gui = gui
         self.diameter_coefficient = Database.get_calibration_data("diameter_coefficient")
         self.previous_time = 0.0
+        self.canny_lower = 100  # 默认值
+        self.canny_upper = 250
 
     def camera_loop(self) -> None:
         current_time = time.time()
@@ -77,10 +79,13 @@ class FiberCamera(QWidget):
         else:
             binary_frame = frame.copy()
 
+        lower = getattr(self, "canny_lower", 100)
+        upper = getattr(self, "canny_upper", 250)
+
         if FiberCamera.use_binary_for_edges is False:
-            edges = cv2.Canny(frame, 100, 250, apertureSize=3)
+            edges = cv2.Canny(frame, lower, upper, apertureSize=3)
         else:
-            edges = cv2.Canny(binary_frame, 100, 250, apertureSize=3)
+            edges = cv2.Canny(binary_frame, lower, upper, apertureSize=3)
         return edges, binary_frame
 
     def get_fiber_diameter(self, lines):
