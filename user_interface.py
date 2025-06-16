@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QGridLayout, QLabel, QDoubleSpinBox, QPushButton,
-    QMessageBox, QLineEdit, QCheckBox
+    QMessageBox, QLineEdit, QCheckBox, QSlider
 )
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
@@ -49,7 +49,7 @@ class UserInterface:
 
         self.add_buttons()
 
-        # 多滤波器 Toggle 控件，布局不变，确保不与标题行重叠
+        # 多滤波器 Toggle 控件
         self.erode_checkbox = QCheckBox("Enable Erode Filter")
         self.erode_checkbox.setChecked(True)
         self.erode_checkbox.stateChanged.connect(self.toggle_erode_filter)
@@ -70,6 +70,26 @@ class UserInterface:
         self.binary_checkbox.stateChanged.connect(self.toggle_binary_filter)
         self.layout.addWidget(self.binary_checkbox, 15, 5, 1, 2)
 
+        # Canny Lower Threshold Slider
+        self.canny_lower_slider = QSlider(Qt.Horizontal)
+        self.canny_lower_slider.setRange(0, 150)
+        self.canny_lower_slider.setSingleStep(5)
+        self.canny_lower_slider.setTickInterval(5)
+        self.canny_lower_slider.setValue(100)
+        self.canny_lower_slider.valueChanged.connect(self.update_canny_lower)
+        self.layout.addWidget(QLabel("Canny Lower"), 16, 4, 1, 1)
+        self.layout.addWidget(self.canny_lower_slider, 16, 5, 1, 3)
+
+        # Canny Upper Threshold Slider
+        self.canny_upper_slider = QSlider(Qt.Horizontal)
+        self.canny_upper_slider.setRange(150, 300)
+        self.canny_upper_slider.setSingleStep(5)
+        self.canny_upper_slider.setTickInterval(5)
+        self.canny_upper_slider.setValue(250)
+        self.canny_upper_slider.valueChanged.connect(self.update_canny_upper)
+        self.layout.addWidget(QLabel("Canny Upper"), 17, 4, 1, 1)
+        self.layout.addWidget(self.canny_upper_slider, 17, 5, 1, 3)
+
         for col in range(10):
             self.layout.setColumnStretch(col, 1)
         for row in range(24):
@@ -80,6 +100,12 @@ class UserInterface:
         self.window.setGeometry(100, 100, 1600, 1000)
         self.window.setFixedSize(1600, 1000)
         self.window.setAutoFillBackground(True)
+
+    def update_canny_lower(self, value):
+        self.fiber_camera.canny_lower = value
+
+    def update_canny_upper(self, value):
+        self.fiber_camera.canny_upper = value
 
     def toggle_erode_filter(self, state):
         FiberCamera.use_erode = (state == 2)
@@ -113,7 +139,6 @@ class UserInterface:
         return spin
 
     def add_buttons(self):
-        # 按钮布局调整
         self.create_button("Calibrate camera", self.set_calibrate_camera, 0, 4)
         self.create_button("Start Motor (Default 30RPM)", self.set_motor_close_loop, 0, 5, "motor_button")
         self.create_button("Start Heater (Default 95C)", self.set_start_device, 0, 6)
