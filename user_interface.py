@@ -98,7 +98,7 @@ class UserInterface:
     def add_plots(self):
         # 宽一行，colspan=5
         diameter_plot = self.Plot("Diameter", "Diameter (mm)")
-        self.layout.addWidget(diameter_plot, 0, 0, 10, 5)
+        self.layout.addWidget(diameter_plot, 0, 0, 10, 4)
         return diameter_plot
 
     def add_diameter_controls(self):
