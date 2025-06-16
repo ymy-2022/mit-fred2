@@ -22,12 +22,12 @@ class UserInterface:
 
         self.motor_setpoint = 30.0
 
-        # Plot 区域宽一行 (colspan=5)
+        # Plot 区域宽一行 (colspan=4)
         self.diameter_plot = self.add_plots()
 
         self.target_diameter = self.add_diameter_controls()
 
-        # 原先在19行的输入框和按钮，移到倒数第二行（22行）
+        # 输入框和按钮移到倒数第二行（22行）
         self.csv_filename = QLineEdit("Enter a file name")
         self.layout.addWidget(self.csv_filename, 22, 5, 1, 2)
 
@@ -40,13 +40,11 @@ class UserInterface:
         raw_image_label = QLabel("Raw Image:")
         raw_image_label.setStyleSheet("font-weight: bold; font-size: 14px;")
         self.layout.addWidget(raw_image_label, 10, 0, 1, 4)
-
         self.layout.addWidget(self.fiber_camera.raw_image, 11, 0, 6, 4)
 
         processed_image_label = QLabel("Processed Image:")
         processed_image_label.setStyleSheet("font-weight: bold; font-size: 14px;")
         self.layout.addWidget(processed_image_label, 17, 0, 1, 4)
-
         self.layout.addWidget(self.fiber_camera.processed_image, 18, 0, 7, 4)
 
         self.add_buttons()
@@ -96,12 +94,13 @@ class UserInterface:
         FiberCamera.use_binary = (state == 2)
 
     def add_plots(self):
-        # 宽一行，colspan=5
+        # 宽一行，colspan=4
         diameter_plot = self.Plot("Diameter", "Diameter (mm)")
         self.layout.addWidget(diameter_plot, 0, 0, 10, 4)
         return diameter_plot
 
     def add_diameter_controls(self):
+        # 放在 Start Heater 右边（Start Heater 在0,6）
         label = QLabel("Target Diameter (mm)")
         label.setStyleSheet("font-size: 16px; font-weight: bold;")
         spin = QDoubleSpinBox()
@@ -109,16 +108,16 @@ class UserInterface:
         spin.setValue(0.35)
         spin.setSingleStep(0.01)
         spin.setDecimals(2)
-        self.layout.addWidget(label, 16, 9)
-        self.layout.addWidget(spin, 17, 9)
+        self.layout.addWidget(label, 0, 7)
+        self.layout.addWidget(spin, 0, 8)
         return spin
 
     def add_buttons(self):
         # 按钮布局调整
+        self.create_button("Calibrate camera", self.set_calibrate_camera, 0, 4)
         self.create_button("Start Motor (Default 30RPM)", self.set_motor_close_loop, 0, 5, "motor_button")
         self.create_button("Start Heater (Default 95C)", self.set_start_device, 0, 6)
         self.create_button("Start Ploting", self.set_camera_feedback, 0, 9)
-        self.create_button("Calibrate camera", self.set_calibrate_camera, 0, 4)
         self.create_button("Download CSV File", self.set_download_csv, 22, 7)
         self.create_button("Exit", self.exit_program, 22, 9)
 
