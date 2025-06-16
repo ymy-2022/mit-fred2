@@ -30,6 +30,7 @@ class FiberCamera(QWidget):
         self.previous_time = 0.0
         self.canny_lower = 100  # 默认值
         self.canny_upper = 250
+        self.hough_threshold = 30  # 默认值
 
     def camera_loop(self) -> None:
         current_time = time.time()
@@ -42,7 +43,11 @@ class FiberCamera(QWidget):
         height, _, _ = frame.shape
         frame = frame[height//4:3*height//4, :]
         edges, binary_frame = self.get_edges(frame)
-        detected_lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 30, minLineLength=30, maxLineGap=100)
+        detected_lines = cv2.HoughLinesP(
+            edges, 1, np.pi / 180,
+            self.hough_threshold,  # 实时阈值
+            minLineLength=30, maxLineGap=100
+        )
         fiber_diameter = self.get_fiber_diameter(detected_lines)
         frame = self.plot_lines(frame, detected_lines)
 
@@ -67,7 +72,6 @@ class FiberCamera(QWidget):
     def get_edges(self, frame: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         kernel = np.ones((5,5), np.uint8)
-
         if FiberCamera.use_erode:
             frame = cv2.erode(frame, kernel, iterations=2)
         if FiberCamera.use_dilate:
@@ -145,7 +149,7 @@ class FiberCamera(QWidget):
                 continue
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             edges, _ = self.get_edges(frame)
-            detected_lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 30, minLineLength=30, maxLineGap=100)
+            detected_lines = cv2.HoughLinesP(edges, 1, np.pi / 180, self.hough_threshold, minLineLength=30, maxLineGap=100)
             fiber_diameter = self.get_fiber_diameter_noC(detected_lines)
             if fiber_diameter > 0:
                 accumulated_diameter += fiber_diameter
@@ -167,7 +171,7 @@ class FiberCamera(QWidget):
             height, _, _ = frame.shape
             frame = frame[height//4:3*height//4, :]
             edges, binary_frame = self.get_edges(frame)
-            detected_lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 30, minLineLength=30, maxLineGap=100)
+            detected_lines = cv2.HoughLinesP(edges, 1, np.pi / 180, self.hough_threshold, minLineLength=30, maxLineGap=100)
             current_diameter = self.get_fiber_diameter(detected_lines)
             if self.gui.diameter_plot:
                 self.gui.diameter_plot.update_plot(current_time, current_diameter, self.target_diameter.value())
