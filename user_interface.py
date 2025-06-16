@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import (
-    QApplication, QWidget, QGridLayout, QLabel, QDoubleSpinBox, QPushButton, QMessageBox, QLineEdit
+    QApplication, QWidget, QGridLayout, QLabel, QDoubleSpinBox, QPushButton,
+    QMessageBox, QLineEdit, QCheckBox
 )
 from PyQt5.QtCore import QTimer
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -26,7 +27,7 @@ class UserInterface:
         self.target_diameter = self.add_diameter_controls()  # QDoubleSpinBox
 
         self.csv_filename = QLineEdit("Enter a file name")
-        self.layout.addWidget(self.csv_filename, 19, 5, 1, 2) 
+        self.layout.addWidget(self.csv_filename, 19, 5, 1, 2)
 
         self.fiber_camera = FiberCamera(self.target_diameter, self)
         if self.fiber_camera.diameter_coefficient == -1:
@@ -37,17 +38,23 @@ class UserInterface:
         raw_image_label = QLabel("Raw Image:")
         raw_image_label.setStyleSheet("font-weight: bold; font-size: 14px;")
         self.layout.addWidget(raw_image_label, 8, 0, 1, 4)  # 1行4列，与 raw_image 对齐
-        
+
         # 添加 Processed Image 标签，紧贴 plot 上方
-        Processed_image_label = QLabel("Processed Image:")
-        Processed_image_label.setStyleSheet("font-weight: bold; font-size: 14px;")
-        self.layout.addWidget(Processed_image_label, 13, 0, 1, 4)  # 1行4列，与 processed_image 对齐
-        
+        processed_image_label = QLabel("Processed Image:")
+        processed_image_label.setStyleSheet("font-weight: bold; font-size: 14px;")
+        self.layout.addWidget(processed_image_label, 13, 0, 1, 4)  # 1行4列，与 processed_image 对齐
+
         # 让两个视频控件宽度与plot一致（4列640px）
         self.layout.addWidget(self.fiber_camera.raw_image, 8, 0, 6, 4)      # 6行4列（640x300）
-        self.layout.addWidget(self.fiber_camera.processed_image, 13, 0, 7, 4) # 6行4列（640x300）
+        self.layout.addWidget(self.fiber_camera.processed_image, 13, 0, 7, 4) # 7行4列（640x300）
 
         self.add_buttons()
+
+        # 新增：添加 Erode 滤波开关 QCheckBox
+        self.erode_checkbox = QCheckBox("Enable Erode Filter")
+        self.erode_checkbox.setChecked(True)  # 默认开启
+        self.erode_checkbox.stateChanged.connect(self.toggle_erode_filter)
+        self.layout.addWidget(self.erode_checkbox, 18, 5, 1, 2)
 
         # 均匀分布所有列和行
         for col in range(10):
@@ -60,6 +67,10 @@ class UserInterface:
         self.window.setGeometry(100, 100, 1600, 1000)
         self.window.setFixedSize(1600, 1000)
         self.window.setAutoFillBackground(True)
+
+    def toggle_erode_filter(self, state):
+        # QCheckBox 选中时 state==2，未选中时 state==0
+        FiberCamera.use_erode = (state == 2)
 
     def add_plots(self):
         diameter_plot = self.Plot("Diameter", "Diameter (mm)")
@@ -118,8 +129,6 @@ class UserInterface:
     def set_start_device(self) -> None:
         self.device_started = True
         QMessageBox.information(self.window, "Device Start", "Temperature closed loop started (setpoint=95, Kp=1.4, Ki=0.2, Kd=0.8, Fan=30%)")
-
-    # 删除了 set_calibrate_motor 方法
 
     def set_calibrate_camera(self) -> None:
         QMessageBox.information(self.window, "Camera Calibration", "Camera is calibrating.")
