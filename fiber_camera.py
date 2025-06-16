@@ -12,7 +12,6 @@ if TYPE_CHECKING:
     from user_interface import UserInterface
 
 class FiberCamera(QWidget):
-    """Process video from camera to obtain the fiber diameter and display it"""
     use_binary_for_edges = True
     use_erode = True
     use_dilate = True
