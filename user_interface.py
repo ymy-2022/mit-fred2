@@ -22,11 +22,8 @@ class UserInterface:
 
         self.motor_setpoint = 30.0
 
-        # Plot 区域宽一行 (colspan=4)
         self.diameter_plot = self.add_plots()
         self.target_diameter = self.add_diameter_controls()
-
-        # 输入框和按钮移到倒数第二行（22行）
         self.csv_filename = QLineEdit("Enter a file name")
         self.layout.addWidget(self.csv_filename, 22, 5, 1, 2)
 
@@ -35,7 +32,6 @@ class UserInterface:
             self.show_message("Camera calibration data not found", "Please calibrate the camera.")
             self.fiber_camera.diameter_coefficient = 0.00782324
 
-        # Raw/Processed Image整体下移一行
         raw_image_label = QLabel("Raw Image:")
         raw_image_label.setStyleSheet("font-weight: bold; font-size: 14px;")
         self.layout.addWidget(raw_image_label, 10, 0, 1, 4)
@@ -48,7 +44,6 @@ class UserInterface:
 
         self.add_buttons()
 
-        # 多滤波器 Toggle 控件
         self.erode_checkbox = QCheckBox("Enable Erode Filter")
         self.erode_checkbox.setChecked(True)
         self.erode_checkbox.stateChanged.connect(self.toggle_erode_filter)
@@ -93,6 +88,18 @@ class UserInterface:
         self.layout.addWidget(self.canny_upper_slider, 17, 5, 1, 2)
         self.layout.addWidget(self.canny_upper_value_label, 17, 7)
 
+        # HoughLines Threshold Slider + 实时数值
+        self.hough_threshold_slider = QSlider(Qt.Horizontal)
+        self.hough_threshold_slider.setRange(10, 100)
+        self.hough_threshold_slider.setSingleStep(5)
+        self.hough_threshold_slider.setTickInterval(5)
+        self.hough_threshold_slider.setValue(30)
+        self.hough_threshold_slider.valueChanged.connect(self.update_hough_threshold)
+        self.hough_threshold_value_label = QLabel(str(self.hough_threshold_slider.value()))
+        self.layout.addWidget(QLabel("Hough Threshold"), 18, 4, 1, 1)
+        self.layout.addWidget(self.hough_threshold_slider, 18, 5, 1, 2)
+        self.layout.addWidget(self.hough_threshold_value_label, 18, 7)
+
         for col in range(10):
             self.layout.setColumnStretch(col, 1)
         for row in range(24):
@@ -111,6 +118,10 @@ class UserInterface:
     def update_canny_upper(self, value):
         self.fiber_camera.canny_upper = value
         self.canny_upper_value_label.setText(str(value))
+
+    def update_hough_threshold(self, value):
+        self.fiber_camera.hough_threshold = value
+        self.hough_threshold_value_label.setText(str(value))
 
     def toggle_erode_filter(self, state):
         FiberCamera.use_erode = (state == 2)
