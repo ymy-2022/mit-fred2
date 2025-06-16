@@ -33,20 +33,22 @@ class UserInterface:
             self.show_message("Camera calibration data not found", "Please calibrate the camera.")
             self.fiber_camera.diameter_coefficient = 0.00782324
 
+        # 布局调整：标题和视频分开行，避免覆盖
         raw_image_label = QLabel("Raw Image:")
         raw_image_label.setStyleSheet("font-weight: bold; font-size: 14px;")
         self.layout.addWidget(raw_image_label, 8, 0, 1, 4)
 
+        self.layout.addWidget(self.fiber_camera.raw_image, 9, 0, 6, 4)
+
         processed_image_label = QLabel("Processed Image:")
         processed_image_label.setStyleSheet("font-weight: bold; font-size: 14px;")
-        self.layout.addWidget(processed_image_label, 13, 0, 1, 4)
+        self.layout.addWidget(processed_image_label, 15, 0, 1, 4)
 
-        self.layout.addWidget(self.fiber_camera.raw_image, 8, 0, 6, 4)
-        self.layout.addWidget(self.fiber_camera.processed_image, 13, 0, 7, 4)
+        self.layout.addWidget(self.fiber_camera.processed_image, 16, 0, 7, 4)
 
         self.add_buttons()
 
-        # 多滤波器 Toggle 控件
+        # 多滤波器 Toggle 控件，布局调整，避免与标题行重叠
         self.erode_checkbox = QCheckBox("Enable Erode Filter")
         self.erode_checkbox.setChecked(True)
         self.erode_checkbox.stateChanged.connect(self.toggle_erode_filter)
@@ -69,7 +71,7 @@ class UserInterface:
 
         for col in range(10):
             self.layout.setColumnStretch(col, 1)
-        for row in range(20):
+        for row in range(24):
             self.layout.setRowStretch(row, 1)
 
         self.window.setLayout(self.layout)
