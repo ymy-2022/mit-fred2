@@ -1,12 +1,10 @@
-"""Module to process video from camera to obtain the fiber diameter and display it"""
 import time
 import sys
 import cv2
 import numpy as np
 from typing import Tuple
-from PyQt5.QtWidgets import QWidget, QLabel, QDoubleSpinBox, QCheckBox, QApplication, QInputDialog, QMessageBox
+from PyQt5.QtWidgets import QWidget, QLabel, QDoubleSpinBox, QInputDialog, QMessageBox
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtCore import QTimer, Qt
 
 from database import Database
 from typing import TYPE_CHECKING
@@ -16,6 +14,7 @@ if TYPE_CHECKING:
 class FiberCamera(QWidget):
     """Process video from camera to obtain the fiber diameter and display it"""
     use_binary_for_edges = True
+    use_erode = True  # 新增：erode滤波开关，默认开启
 
     def __init__(self, target_diameter: QDoubleSpinBox, gui: 'UserInterface') -> None:
         super().__init__()
@@ -48,7 +47,6 @@ class FiberCamera(QWidget):
         Database.camera_timestamps.append(current_time)
         Database.diameter_readings.append(fiber_diameter)
         if self.target_diameter is not None:
-            # target_diameter 是 QDoubleSpinBox
             Database.diameter_setpoint.append(self.target_diameter.value())
         else:
             Database.diameter_setpoint.append(0)
@@ -71,7 +69,9 @@ class FiberCamera(QWidget):
         """Filter the frame to enhance the edges"""
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         kernel = np.ones((5,5), np.uint8)
-        frame = cv2.erode(frame, kernel, iterations=2)
+        # 根据开关决定是否执行erode
+        if FiberCamera.use_erode:
+            frame = cv2.erode(frame, kernel, iterations=2)
         frame = cv2.dilate(frame, kernel, iterations=2)
         gaussian_blurred = cv2.GaussianBlur(frame, (5, 5), 0)
         _, binary_frame = cv2.threshold(gaussian_blurred, 100, 255, cv2.THRESH_BINARY)
