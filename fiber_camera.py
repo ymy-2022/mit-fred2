@@ -12,19 +12,18 @@ if TYPE_CHECKING:
     from user_interface import UserInterface
 
 class FiberCamera(QWidget):
-    """Process video from camera to obtain the fiber diameter and display it"""
     use_binary_for_edges = True
     use_erode = True
     use_dilate = True
     use_gaussian = True
     use_binary = True
 
-    def __init__(self, target_diameter: QDoubleSpinBox, gui: 'UserInterface') -> None:
+    def __init__(self, target_diameter, gui: 'UserInterface') -> None:
         super().__init__()
         self.raw_image = QLabel()
         self.canny_image = QLabel()
         self.processed_image = QLabel()
-        self.target_diameter = target_diameter
+        self.target_diameter = target_diameter  # 现在为 None
         self.capture = cv2.VideoCapture(0)
         self.gui = gui
         self.diameter_coefficient = Database.get_calibration_data("diameter_coefficient")
@@ -47,10 +46,7 @@ class FiberCamera(QWidget):
 
         Database.camera_timestamps.append(current_time)
         Database.diameter_readings.append(fiber_diameter)
-        if self.target_diameter is not None:
-            Database.diameter_setpoint.append(self.target_diameter.value())
-        else:
-            Database.diameter_setpoint.append(0)
+        Database.diameter_setpoint.append(0)  # 直接写0
         Database.diameter_delta_time.append(current_time - self.previous_time)
         self.previous_time = current_time
 
@@ -166,10 +162,10 @@ class FiberCamera(QWidget):
             detected_lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 30, minLineLength=30, maxLineGap=100)
             current_diameter = self.get_fiber_diameter(detected_lines)
             if self.gui.diameter_plot:
-                self.gui.diameter_plot.update_plot(current_time, current_diameter, self.target_diameter.value())
+                self.gui.diameter_plot.update_plot(current_time, current_diameter, 0)
             Database.camera_timestamps.append(current_time)
             Database.diameter_readings.append(current_diameter)
-            Database.diameter_setpoint.append(self.target_diameter.value())
+            Database.diameter_setpoint.append(0)
             Database.diameter_delta_time.append(current_time - self.previous_time)
             self.previous_time = current_time
         except Exception as e:
