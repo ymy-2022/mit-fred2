@@ -24,7 +24,6 @@ class UserInterface:
 
         # Plot 区域宽一行 (colspan=4)
         self.diameter_plot = self.add_plots()
-
         self.target_diameter = self.add_diameter_controls()
 
         # 输入框和按钮移到倒数第二行（22行）
@@ -70,25 +69,29 @@ class UserInterface:
         self.binary_checkbox.stateChanged.connect(self.toggle_binary_filter)
         self.layout.addWidget(self.binary_checkbox, 15, 5, 1, 2)
 
-        # Canny Lower Threshold Slider
+        # Canny Lower Threshold Slider + 实时数值
         self.canny_lower_slider = QSlider(Qt.Horizontal)
         self.canny_lower_slider.setRange(0, 150)
         self.canny_lower_slider.setSingleStep(5)
         self.canny_lower_slider.setTickInterval(5)
         self.canny_lower_slider.setValue(100)
         self.canny_lower_slider.valueChanged.connect(self.update_canny_lower)
+        self.canny_lower_value_label = QLabel(str(self.canny_lower_slider.value()))
         self.layout.addWidget(QLabel("Canny Lower"), 16, 4, 1, 1)
-        self.layout.addWidget(self.canny_lower_slider, 16, 5, 1, 3)
+        self.layout.addWidget(self.canny_lower_slider, 16, 5, 1, 2)
+        self.layout.addWidget(self.canny_lower_value_label, 16, 7)
 
-        # Canny Upper Threshold Slider
+        # Canny Upper Threshold Slider + 实时数值
         self.canny_upper_slider = QSlider(Qt.Horizontal)
         self.canny_upper_slider.setRange(150, 300)
         self.canny_upper_slider.setSingleStep(5)
         self.canny_upper_slider.setTickInterval(5)
         self.canny_upper_slider.setValue(250)
         self.canny_upper_slider.valueChanged.connect(self.update_canny_upper)
+        self.canny_upper_value_label = QLabel(str(self.canny_upper_slider.value()))
         self.layout.addWidget(QLabel("Canny Upper"), 17, 4, 1, 1)
-        self.layout.addWidget(self.canny_upper_slider, 17, 5, 1, 3)
+        self.layout.addWidget(self.canny_upper_slider, 17, 5, 1, 2)
+        self.layout.addWidget(self.canny_upper_value_label, 17, 7)
 
         for col in range(10):
             self.layout.setColumnStretch(col, 1)
@@ -103,9 +106,11 @@ class UserInterface:
 
     def update_canny_lower(self, value):
         self.fiber_camera.canny_lower = value
+        self.canny_lower_value_label.setText(str(value))
 
     def update_canny_upper(self, value):
         self.fiber_camera.canny_upper = value
+        self.canny_upper_value_label.setText(str(value))
 
     def toggle_erode_filter(self, state):
         FiberCamera.use_erode = (state == 2)
@@ -120,13 +125,11 @@ class UserInterface:
         FiberCamera.use_binary = (state == 2)
 
     def add_plots(self):
-        # 宽一行，colspan=4
         diameter_plot = self.Plot("Diameter", "Diameter (mm)")
         self.layout.addWidget(diameter_plot, 0, 0, 10, 4)
         return diameter_plot
 
     def add_diameter_controls(self):
-        # 放在 Start Heater 右边（Start Heater 在0,6）
         label = QLabel("Target Diameter (mm)")
         label.setStyleSheet("font-size: 16px; font-weight: bold;")
         spin = QDoubleSpinBox()
