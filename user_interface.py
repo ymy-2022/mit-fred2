@@ -44,25 +44,26 @@ class UserInterface:
 
         self.add_buttons()
 
+        # Move checkboxes and sliders by 1 column to the right (col + 1)
         self.erode_checkbox = QCheckBox("Enable Erode Filter")
         self.erode_checkbox.setChecked(True)
         self.erode_checkbox.stateChanged.connect(self.toggle_erode_filter)
-        self.layout.addWidget(self.erode_checkbox, 12, 5, 1, 2)
+        self.layout.addWidget(self.erode_checkbox, 12, 6, 1, 2)
 
         self.dilate_checkbox = QCheckBox("Enable Dilate Filter")
         self.dilate_checkbox.setChecked(True)
         self.dilate_checkbox.stateChanged.connect(self.toggle_dilate_filter)
-        self.layout.addWidget(self.dilate_checkbox, 13, 5, 1, 2)
+        self.layout.addWidget(self.dilate_checkbox, 13, 6, 1, 2)
 
         self.gaussian_checkbox = QCheckBox("Enable Gaussian Blur")
         self.gaussian_checkbox.setChecked(True)
         self.gaussian_checkbox.stateChanged.connect(self.toggle_gaussian_filter)
-        self.layout.addWidget(self.gaussian_checkbox, 14, 5, 1, 2)
+        self.layout.addWidget(self.gaussian_checkbox, 14, 6, 1, 2)
 
         self.binary_checkbox = QCheckBox("Enable Binary Threshold")
         self.binary_checkbox.setChecked(True)
         self.binary_checkbox.stateChanged.connect(self.toggle_binary_filter)
-        self.layout.addWidget(self.binary_checkbox, 15, 5, 1, 2)
+        self.layout.addWidget(self.binary_checkbox, 15, 6, 1, 2)
 
         # Canny Lower Threshold Slider + 实时数值
         self.canny_lower_slider = QSlider(Qt.Horizontal)
@@ -72,9 +73,9 @@ class UserInterface:
         self.canny_lower_slider.setValue(100)
         self.canny_lower_slider.valueChanged.connect(self.update_canny_lower)
         self.canny_lower_value_label = QLabel(str(self.canny_lower_slider.value()))
-        self.layout.addWidget(QLabel("Canny Lower"), 16, 4, 1, 1)
-        self.layout.addWidget(self.canny_lower_slider, 16, 5, 1, 2)
-        self.layout.addWidget(self.canny_lower_value_label, 16, 7)
+        self.layout.addWidget(QLabel("Canny Lower"), 16, 5, 1, 1)
+        self.layout.addWidget(self.canny_lower_slider, 16, 6, 1, 2)
+        self.layout.addWidget(self.canny_lower_value_label, 16, 8)
 
         # Canny Upper Threshold Slider + 实时数值
         self.canny_upper_slider = QSlider(Qt.Horizontal)
@@ -84,9 +85,9 @@ class UserInterface:
         self.canny_upper_slider.setValue(250)
         self.canny_upper_slider.valueChanged.connect(self.update_canny_upper)
         self.canny_upper_value_label = QLabel(str(self.canny_upper_slider.value()))
-        self.layout.addWidget(QLabel("Canny Upper"), 17, 4, 1, 1)
-        self.layout.addWidget(self.canny_upper_slider, 17, 5, 1, 2)
-        self.layout.addWidget(self.canny_upper_value_label, 17, 7)
+        self.layout.addWidget(QLabel("Canny Upper"), 17, 5, 1, 1)
+        self.layout.addWidget(self.canny_upper_slider, 17, 6, 1, 2)
+        self.layout.addWidget(self.canny_upper_value_label, 17, 8)
 
         # HoughLines Threshold Slider + 实时数值
         self.hough_threshold_slider = QSlider(Qt.Horizontal)
@@ -96,9 +97,9 @@ class UserInterface:
         self.hough_threshold_slider.setValue(30)
         self.hough_threshold_slider.valueChanged.connect(self.update_hough_threshold)
         self.hough_threshold_value_label = QLabel(str(self.hough_threshold_slider.value()))
-        self.layout.addWidget(QLabel("Hough Threshold"), 18, 4, 1, 1)
-        self.layout.addWidget(self.hough_threshold_slider, 18, 5, 1, 2)
-        self.layout.addWidget(self.hough_threshold_value_label, 18, 7)
+        self.layout.addWidget(QLabel("Hough Threshold"), 18, 5, 1, 1)
+        self.layout.addWidget(self.hough_threshold_slider, 18, 6, 1, 2)
+        self.layout.addWidget(self.hough_threshold_value_label, 18, 8)
 
         for col in range(10):
             self.layout.setColumnStretch(col, 1)
