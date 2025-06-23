@@ -1,4 +1,3 @@
-# File to control the extrusion process
 import time
 import math
 import RPi.GPIO as GPIO
@@ -12,7 +11,6 @@ from database import Database
 from user_interface import UserInterface
 
 class Thermistor:
-    """Constants and util functions for the thermistor"""
     REFERENCE_TEMPERATURE = 298.15 # K
     RESISTANCE_AT_REFERENCE = 100000 # Ω
     BETA_COEFFICIENT = 3977 # K
@@ -22,7 +20,6 @@ class Thermistor:
 
     @classmethod
     def get_temperature(cls, voltage: float) -> float:
-        """Get the average temperature from the voltage using Steinhart-Hart equation"""
         if voltage < 0.0001:
             return 0
         resistance = ((cls.VOLTAGE_SUPPLY - voltage) * cls.RESISTOR )/ voltage
@@ -36,7 +33,6 @@ class Thermistor:
         return average_temperature
 
 class Extruder:
-    """Controller of the extrusion process: the heater and stepper motor"""
     HEATER_PIN = 6
     DIRECTION_PIN = 16
     STEP_PIN = 12
@@ -59,10 +55,8 @@ class Extruder:
         GPIO.setup(Extruder.DIRECTION_PIN, GPIO.OUT)
         GPIO.setup(Extruder.STEP_PIN, GPIO.OUT)
         self.set_motor_direction(False)
-        # PWM Setup
         self.pwm = GPIO.PWM(Extruder.STEP_PIN, 1000)  
         self.pwm.start(0)  
-        
         self.heater_pwm = GPIO.PWM(Extruder.HEATER_PIN, 1)  
         self.heater_pwm.start(0)  
     
@@ -70,31 +64,26 @@ class Extruder:
         self.current_diameter = 0.0
         self.diameter_setpoint = Extruder.DEFAULT_DIAMETER
         
-        # Control parameters
         self.previous_time = 0.0
         self.previous_error = 0.0
         self.integral = 0.0
 
     def initialize_thermistor(self):
-        """Initialize the SPI for thermistor temperature readings"""
         spi = busio.SPI(clock=board.SCK, MISO=board.MISO, MOSI=board.MOSI)
         cs = digitalio.DigitalInOut(board.D8)
         mcp = MCP.MCP3008(spi, cs)
         self.channel_0 = AnalogIn(mcp, MCP.P0)
 
     def set_motor_direction(self, clockwise: bool) -> None:
-        """Set motor direction"""
         GPIO.output(Extruder.DIRECTION_PIN, not clockwise)
 
     def set_motor_speed(self, rpm: float) -> None:
-        """Set motor speed in RPM"""
         steps_per_second = (rpm * Extruder.STEPS_PER_REVOLUTION) / 60
         frequency = steps_per_second
         self.pwm.ChangeFrequency(frequency)
         self.pwm.ChangeDutyCycle(50)
 
     def stepper_control_loop(self) -> None:
-        """Control stepper motor speed"""
         try:
             setpoint_rpm = self.gui.extrusion_motor_speed.value()
             self.pwm.ChangeDutyCycle(0)
@@ -106,11 +95,10 @@ class Extruder:
             self.gui.show_message("Error", "Stepper control loop error")
 
     def temperature_control_loop(self, current_time: float) -> None:
-        """Closed loop control of the temperature of the extruder for desired diameter"""
         if current_time - self.previous_time <= Extruder.SAMPLE_TIME:
             return
         try:
-            # 95°C
+            # 目标温度硬编码为95°C
             target_temperature = 95.0
             kp = 1
             ki = 0.001
@@ -147,7 +135,6 @@ class Extruder:
             self.gui.show_message("Error", "Error in temperature control loop. Please restart the program.")
 
     def temperature_open_loop_control(self, current_time: float) -> None:
-        """Open loop PWM control of the heater"""
         if current_time - self.previous_time <= Extruder.SAMPLE_TIME:
             return
         try:
