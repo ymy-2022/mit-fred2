@@ -14,8 +14,9 @@ class UserInterface:
         self.window = QWidget()
         self.layout = QGridLayout()
 
-        # Heater control flags
+        # Heater and motor control flags
         self.heater_started = False
+        self.device_started = False  # <-- This fixes your error
 
         # Add plots and controls
         self.diameter_plot = self.add_plots()
@@ -52,7 +53,7 @@ class UserInterface:
         self.layout.addWidget(processed_image_label, 17, 0, 1, 4)
         self.layout.addWidget(self.fiber_camera.processed_image, 18, 0, 7, 4)
 
-        # Add buttons including Start Heater button
+        # Add buttons including Start Heater and Start Motor buttons
         self.add_buttons()
 
         # Filter checkboxes
@@ -124,6 +125,7 @@ class UserInterface:
 
     def add_buttons(self):
         self.add_heater_button(0, 5)
+        self.add_motor_button(1, 5)  # Motor button below heater button
         self.create_button("Calibrate camera", self.set_calibrate_camera, 0, 4)
         self.create_button("Start Ploting", self.set_camera_feedback, 0, 9)
         self.create_button("Download CSV File", self.set_download_csv, 22, 7)
@@ -146,6 +148,24 @@ class UserInterface:
             self.heater_button.setText("Start Heater")
             self.heater_button.setStyleSheet("background-color: green; font-size: 14px; font-weight: bold;")
             QMessageBox.information(self.window, "Heater Stopped", "Heater stopped.")
+
+    def add_motor_button(self, row, col):
+        self.motor_button = QPushButton("Start Motor")
+        self.motor_button.setStyleSheet("background-color: green; font-size: 14px; font-weight: bold;")
+        self.motor_button.setCheckable(True)
+        self.motor_button.clicked.connect(self.toggle_motor)
+        self.layout.addWidget(self.motor_button, row, col)
+
+    def toggle_motor(self):
+        self.device_started = not self.device_started
+        if self.device_started:
+            self.motor_button.setText("Stop Motor")
+            self.motor_button.setStyleSheet("background-color: red; font-size: 14px; font-weight: bold;")
+            QMessageBox.information(self.window, "Motor Started", "Motor and heating logic started.")
+        else:
+            self.motor_button.setText("Start Motor")
+            self.motor_button.setStyleSheet("background-color: green; font-size: 14px; font-weight: bold;")
+            QMessageBox.information(self.window, "Motor Stopped", "Motor and heating logic stopped.")
 
     def create_button(self, text, handler, row, col, obj_attr_name=None):
         btn = QPushButton(text)
