@@ -5,7 +5,6 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import QTimer, Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-
 from database import Database
 from fiber_camera import FiberCamera
 
@@ -14,7 +13,6 @@ class UserInterface:
         self.app = QApplication.instance() or QApplication([])
         self.window = QWidget()
         self.layout = QGridLayout()
-
         self.device_started = False
         self.start_motor_calibration = False
         self.camera_feedback_enabled = False
@@ -23,10 +21,8 @@ class UserInterface:
 
         self.diameter_plot = self.add_plots()
         self.target_diameter = self.add_diameter_controls()
-
         self.csv_filename = QLineEdit("Enter a file name")
         self.layout.addWidget(self.csv_filename, 22, 5, 1, 2)
-
         self.fiber_camera = FiberCamera(self.target_diameter, self)
         if self.fiber_camera.diameter_coefficient == -1:
             self.show_message("Camera calibration data not found", "Please calibrate the camera.")
@@ -36,7 +32,6 @@ class UserInterface:
         raw_image_label.setStyleSheet("font-weight: bold; font-size: 14px;")
         self.layout.addWidget(raw_image_label, 10, 0, 1, 4)
         self.layout.addWidget(self.fiber_camera.raw_image, 11, 0, 6, 4)
-
         processed_image_label = QLabel("Processed Image:")
         processed_image_label.setStyleSheet("font-weight: bold; font-size: 14px;")
         self.layout.addWidget(processed_image_label, 17, 0, 1, 4)
@@ -48,17 +43,14 @@ class UserInterface:
         self.erode_checkbox.setChecked(True)
         self.erode_checkbox.stateChanged.connect(self.toggle_erode_filter)
         self.layout.addWidget(self.erode_checkbox, 12, 6, 1, 2)
-
         self.dilate_checkbox = QCheckBox("Enable Dilate Filter")
         self.dilate_checkbox.setChecked(True)
         self.dilate_checkbox.stateChanged.connect(self.toggle_dilate_filter)
         self.layout.addWidget(self.dilate_checkbox, 13, 6, 1, 2)
-
         self.gaussian_checkbox = QCheckBox("Enable Gaussian Blur")
         self.gaussian_checkbox.setChecked(True)
         self.gaussian_checkbox.stateChanged.connect(self.toggle_gaussian_filter)
         self.layout.addWidget(self.gaussian_checkbox, 14, 6, 1, 2)
-
         self.binary_checkbox = QCheckBox("Enable Binary Threshold")
         self.binary_checkbox.setChecked(True)
         self.binary_checkbox.stateChanged.connect(self.toggle_binary_filter)
@@ -150,12 +142,29 @@ class UserInterface:
         return spin
 
     def add_buttons(self):
+        self.create_toggle_button(0, 5)  # Unified Start/Stop button
         self.create_button("Calibrate camera", self.set_calibrate_camera, 0, 4)
-        self.create_button("Start Motor (Default 30RPM)", self.set_motor_close_loop, 0, 5, "motor_button")
-        self.create_button("Start Heater (Default 95C)", self.set_start_device, 0, 6)
         self.create_button("Start Ploting", self.set_camera_feedback, 0, 9)
         self.create_button("Download CSV File", self.set_download_csv, 22, 7)
         self.create_button("Exit", self.exit_program, 22, 9)
+
+    def create_toggle_button(self, row, col):
+        self.toggle_button = QPushButton("Start")
+        self.toggle_button.setStyleSheet("background-color: green; font-size: 14px; font-weight: bold;")
+        self.toggle_button.setCheckable(True)
+        self.toggle_button.clicked.connect(self.toggle_device)
+        self.layout.addWidget(self.toggle_button, row, col)
+
+    def toggle_device(self):
+        self.device_started = not self.device_started
+        if self.device_started:
+            self.toggle_button.setText("Stop")
+            self.toggle_button.setStyleSheet("background-color: red; font-size: 14px; font-weight: bold;")
+            QMessageBox.information(self.window, "Device Started", "Heater and motor started.")
+        else:
+            self.toggle_button.setText("Start")
+            self.toggle_button.setStyleSheet("background-color: green; font-size: 14px; font-weight: bold;")
+            QMessageBox.information(self.window, "Device Stopped", "Heater and motor stopped.")
 
     def create_button(self, text, handler, row, col, obj_attr_name=None):
         btn = QPushButton(text)
@@ -172,23 +181,10 @@ class UserInterface:
         self.window.show()
         self.app.exec_()
 
-    def set_motor_close_loop(self) -> None:
-        self.dc_motor_close_loop_enabled = not self.dc_motor_close_loop_enabled
-        if self.dc_motor_close_loop_enabled:
-            self.motor_button.setText("Stop Motor")
-            QMessageBox.information(self.window, "Motor Control", f"Motor closed loop started (setpoint={self.motor_setpoint}, Kp=0.4, Ki=0.2, Kd=0.05)")
-        else:
-            self.motor_button.setText("Start Motor (Default 30RPM)")
-            QMessageBox.information(self.window, "Motor Control", "Motor closed loop stopped.")
-
     def set_camera_feedback(self) -> None:
         self.camera_feedback_enabled = not self.camera_feedback_enabled
         msg = "started" if self.camera_feedback_enabled else "stopped"
         QMessageBox.information(self.window, "Camera Feedback", f"Camera feedback {msg}.")
-
-    def set_start_device(self) -> None:
-        self.device_started = True
-        QMessageBox.information(self.window, "Device Start", "Temperature closed loop started (setpoint=95, Kp=1.4, Ki=0.2, Kd=0.8, Fan=30%)")
 
     def set_calibrate_camera(self) -> None:
         QMessageBox.information(self.window, "Camera Calibration", "Camera is calibrating.")
