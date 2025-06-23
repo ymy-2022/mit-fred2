@@ -2,13 +2,18 @@
 import threading
 import time
 import RPi.GPIO as GPIO
+from PyQt5.QtCore import pyqtSignal, QObject, QTimer
 from database import Database
 from user_interface import UserInterface
 from fan import Fan
 from spooler import Spooler
 from extruder import Extruder
 
-def hardware_control(gui: UserInterface) -> None:
+class GuiErrorSignaller(QObject):
+    # Signal for thread-safe error reporting
+    error_signal = pyqtSignal(str, str)
+
+def hardware_control(gui: UserInterface, error_signaller: GuiErrorSignaller) -> None:
     """Thread to handle hardware control"""
     time.sleep(1)
     GPIO.setmode(GPIO.BCM)
@@ -21,8 +26,8 @@ def hardware_control(gui: UserInterface) -> None:
         spooler.start(1000, 0)
     except Exception as e:
         print(f"Error in hardware control: {e}")
-        gui.show_message("Error while starting the device",
-                         "Please restart the program.")
+        error_signaller.error_signal.emit("Error while starting the device", "Please restart the program.")
+        return
 
     init_time = time.time()
     while True:
@@ -33,16 +38,13 @@ def hardware_control(gui: UserInterface) -> None:
                 spooler.calibrate()
                 gui.start_motor_calibration = False
 
-            # 仅保留闭环直流电机控制
             if gui.dc_motor_close_loop_enabled:
                 spooler.dc_motor_close_loop_control(current_time)
 
-            # 仅保留闭环加热器控制
             if gui.device_started:
                 extruder.temperature_control_loop(current_time)
                 extruder.stepper_control_loop()
 
-            # 相机反馈绘图
             if gui.camera_feedback_enabled:
                 gui.fiber_camera.camera_feedback(current_time)
 
@@ -50,19 +52,25 @@ def hardware_control(gui: UserInterface) -> None:
             time.sleep(0.05)
         except Exception as e:
             print(f"Error in hardware control loop: {e}")
-            gui.show_message("Error in hardware control loop",
-                             "Please restart the program.")
-            fan.stop()
-            spooler.stop()
-            extruder.stop()
+            error_signaller.error_signal.emit("Error in hardware control loop", "Please restart the program.")
+            try:
+                fan.stop()
+                spooler.stop()
+                extruder.stop()
+            except Exception:
+                pass
+            break
 
 if __name__ == "__main__":
     print("Starting FrED Device...")
     ui = UserInterface()
+    error_signaller = GuiErrorSignaller()
+    # Connect the error signal to the GUI's show_message method
+    error_signaller.error_signal.connect(ui.show_message)
+
     time.sleep(2)
-    hardware_thread = threading.Thread(target=hardware_control, args=(ui,))
+    hardware_thread = threading.Thread(target=hardware_control, args=(ui, error_signaller), daemon=True)
     hardware_thread.start()
-    threading.Lock()
     ui.start_gui()
-    hardware_thread.join()
+    # No need to join the thread; GUI will close the app
     print("FrED Device Closed.")
