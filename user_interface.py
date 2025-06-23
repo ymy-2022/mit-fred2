@@ -13,11 +13,8 @@ class UserInterface:
         self.app = QApplication.instance() or QApplication([])
         self.window = QWidget()
         self.layout = QGridLayout()
-        self.device_started = False
-        self.start_motor_calibration = False
-        self.camera_feedback_enabled = False
-        self.dc_motor_close_loop_enabled = False
-        self.motor_setpoint = 30.0
+        self.heater_started = False
+        self.target_temperature = 95.0  # Default, set on button press
 
         self.diameter_plot = self.add_plots()
         self.target_diameter = self.add_diameter_controls()
@@ -100,6 +97,40 @@ class UserInterface:
         self.window.setFixedSize(1600, 1000)
         self.window.setAutoFillBackground(True)
 
+    def add_buttons(self):
+        self.add_heater_button(0, 5)
+        self.create_button("Calibrate camera", self.set_calibrate_camera, 0, 4)
+        self.create_button("Start Ploting", self.set_camera_feedback, 0, 9)
+        self.create_button("Download CSV File", self.set_download_csv, 22, 7)
+        self.create_button("Exit", self.exit_program, 22, 9)
+
+    def add_heater_button(self, row, col):
+        self.heater_button = QPushButton("Start Heater (95°C)")
+        self.heater_button.setStyleSheet("background-color: green; font-size: 14px; font-weight: bold;")
+        self.heater_button.setCheckable(True)
+        self.heater_button.clicked.connect(self.toggle_heater)
+        self.layout.addWidget(self.heater_button, row, col)
+
+    def toggle_heater(self):
+        self.heater_started = not self.heater_started
+        if self.heater_started:
+            self.target_temperature = 95.0
+            self.heater_button.setText("Stop Heater")
+            self.heater_button.setStyleSheet("background-color: red; font-size: 14px; font-weight: bold;")
+            QMessageBox.information(self.window, "Heater Started", "Heater started. Target: 95°C")
+        else:
+            self.heater_button.setText("Start Heater (95°C)")
+            self.heater_button.setStyleSheet("background-color: green; font-size: 14px; font-weight: bold;")
+            QMessageBox.information(self.window, "Heater Stopped", "Heater stopped.")
+
+    def create_button(self, text, handler, row, col, obj_attr_name=None):
+        btn = QPushButton(text)
+        btn.setStyleSheet("background-color: green; font-size: 14px; font-weight: bold;")
+        btn.clicked.connect(handler)
+        self.layout.addWidget(btn, row, col)
+        if obj_attr_name:
+            setattr(self, obj_attr_name, btn)
+
     def update_canny_lower(self, value):
         self.fiber_camera.canny_lower = value
         self.canny_lower_value_label.setText(str(value))
@@ -140,39 +171,6 @@ class UserInterface:
         self.layout.addWidget(label, 0, 7)
         self.layout.addWidget(spin, 0, 8)
         return spin
-
-    def add_buttons(self):
-        self.create_toggle_button(0, 5)  # Unified Start/Stop button
-        self.create_button("Calibrate camera", self.set_calibrate_camera, 0, 4)
-        self.create_button("Start Ploting", self.set_camera_feedback, 0, 9)
-        self.create_button("Download CSV File", self.set_download_csv, 22, 7)
-        self.create_button("Exit", self.exit_program, 22, 9)
-
-    def create_toggle_button(self, row, col):
-        self.toggle_button = QPushButton("Start")
-        self.toggle_button.setStyleSheet("background-color: green; font-size: 14px; font-weight: bold;")
-        self.toggle_button.setCheckable(True)
-        self.toggle_button.clicked.connect(self.toggle_device)
-        self.layout.addWidget(self.toggle_button, row, col)
-
-    def toggle_device(self):
-        self.device_started = not self.device_started
-        if self.device_started:
-            self.toggle_button.setText("Stop")
-            self.toggle_button.setStyleSheet("background-color: red; font-size: 14px; font-weight: bold;")
-            QMessageBox.information(self.window, "Device Started", "Heater and motor started.")
-        else:
-            self.toggle_button.setText("Start")
-            self.toggle_button.setStyleSheet("background-color: green; font-size: 14px; font-weight: bold;")
-            QMessageBox.information(self.window, "Device Stopped", "Heater and motor stopped.")
-
-    def create_button(self, text, handler, row, col, obj_attr_name=None):
-        btn = QPushButton(text)
-        btn.setStyleSheet("background-color: green; font-size: 14px; font-weight: bold;")
-        btn.clicked.connect(handler)
-        self.layout.addWidget(btn, row, col)
-        if obj_attr_name:
-            setattr(self, obj_attr_name, btn)
 
     def start_gui(self) -> None:
         timer = QTimer()
