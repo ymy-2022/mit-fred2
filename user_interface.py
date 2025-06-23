@@ -16,7 +16,7 @@ class UserInterface:
 
         # Heater and motor control flags
         self.heater_started = False
-        self.device_started = False  # <-- This fixes your error
+        self.device_started = False
 
         # Add plots and controls
         self.diameter_plot = self.add_plots()
@@ -125,7 +125,7 @@ class UserInterface:
 
     def add_buttons(self):
         self.add_heater_button(0, 5)
-        self.add_motor_button(1, 5)  # Motor button below heater button
+        self.add_motor_button(1, 5)
         self.create_button("Calibrate camera", self.set_calibrate_camera, 0, 4)
         self.create_button("Start Ploting", self.set_camera_feedback, 0, 9)
         self.create_button("Download CSV File", self.set_download_csv, 22, 7)
@@ -161,11 +161,11 @@ class UserInterface:
         if self.device_started:
             self.motor_button.setText("Stop Motor")
             self.motor_button.setStyleSheet("background-color: red; font-size: 14px; font-weight: bold;")
-            QMessageBox.information(self.window, "Motor Started", "Motor and heating logic started.")
+            QMessageBox.information(self.window, "Motor Started", "Motor started.")
         else:
             self.motor_button.setText("Start Motor")
             self.motor_button.setStyleSheet("background-color: green; font-size: 14px; font-weight: bold;")
-            QMessageBox.information(self.window, "Motor Stopped", "Motor and heating logic stopped.")
+            QMessageBox.information(self.window, "Motor Stopped", "Motor stopped.")
 
     def create_button(self, text, handler, row, col, obj_attr_name=None):
         btn = QPushButton(text)
