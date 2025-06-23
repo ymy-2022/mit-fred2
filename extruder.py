@@ -37,7 +37,7 @@ class Thermistor:
 class Extruder:
     HEATER_PIN = 6
     DIRECTION_PIN = 16
-    STEP_PIN = 12
+    STEP_PIN = 20
     STEPS_PER_REVOLUTION = 200
     SAMPLE_TIME = 0.1
     MAX_OUTPUT = 100
