@@ -35,19 +35,13 @@ class Extruder:
     HEATER_PIN = 6
     DIRECTION_PIN = 16
     STEP_PIN = 12
-    DEFAULT_DIAMETER = 0.35
-    MINIMUM_DIAMETER = 0.3
-    MAXIMUM_DIAMETER = 0.6
     STEPS_PER_REVOLUTION = 200
-    DEFAULT_RPM = 0.6
     SAMPLE_TIME = 0.1
     MAX_OUTPUT = 100
     MIN_OUTPUT = 0
 
     def __init__(self, gui: UserInterface) -> None:
         self.gui = gui
-        self.speed = 0.0
-        self.duty_cycle = 0.0
         self.channel_0 = None
 
         GPIO.setup(Extruder.HEATER_PIN, GPIO.OUT)
@@ -61,8 +55,6 @@ class Extruder:
         self.heater_pwm.start(0)
         self.initialize_thermistor()
 
-        self.current_diameter = 0.0
-        self.diameter_setpoint = Extruder.DEFAULT_DIAMETER
         self.previous_time = 0.0
         self.previous_error = 0.0
         self.integral = 0.0
@@ -84,24 +76,26 @@ class Extruder:
 
     def stepper_control_loop(self) -> None:
         try:
-            setpoint_rpm = self.gui.extrusion_motor_speed.value()
-            self.pwm.ChangeDutyCycle(0)
-            if setpoint_rpm > 0.0:
+            if self.gui.heater_started:
+                setpoint_rpm = 30.0  # Default RPM
                 self.set_motor_speed(setpoint_rpm)
-            Database.extruder_rpm.append(setpoint_rpm)
+                Database.extruder_rpm.append(setpoint_rpm)
+            else:
+                self.pwm.ChangeDutyCycle(0)
         except Exception as e:
             print(f"Error in stepper control loop: {e}")
-            # Only safe to call show_message from main thread or via signals
 
     def temperature_control_loop(self, current_time: float) -> None:
+        if not self.gui.heater_started:
+            self.heater_pwm.ChangeDutyCycle(0)
+            return
         if current_time - self.previous_time <= Extruder.SAMPLE_TIME:
             return
         try:
-            target_temperature = 95.0  # Hardcoded setpoint
+            target_temperature = self.gui.target_temperature  # Always 95.0 if started
             kp = 1
             ki = 0.001
             kd = 0.6
-
             delta_time = current_time - self.previous_time
             self.previous_time = current_time
 
@@ -112,52 +106,13 @@ class Extruder:
             self.previous_error = error
 
             output = kp * error + ki * self.integral + kd * derivative
-
-            if output > Extruder.MAX_OUTPUT:
-                output = Extruder.MAX_OUTPUT
-            elif output < Extruder.MIN_OUTPUT:
-                output = Extruder.MIN_OUTPUT
-
+            output = max(min(output, Extruder.MAX_OUTPUT), Extruder.MIN_OUTPUT)
             self.heater_pwm.ChangeDutyCycle(output)
 
-            # self.gui.temperature_plot.update_plot(current_time, temperature, target_temperature)
-
-            Database.temperature_timestamps.append(current_time)
-            Database.temperature_delta_time.append(delta_time)
-            Database.temperature_setpoint.append(target_temperature)
-            Database.temperature_error.append(error)
-            Database.temperature_pid_output.append(output)
-            Database.temperature_kp.append(kp)
-            Database.temperature_ki.append(ki)
-            Database.temperature_kd.append(kd)
+            # Optionally: Database logging here
         except Exception as e:
             print(f"Error in temperature control loop: {e}")
-            # Only safe to call show_message from main thread or via signals
 
-    def temperature_open_loop_control(self, current_time: float) -> None:
-        if current_time - self.previous_time <= Extruder.SAMPLE_TIME:
-            return
-        try:
-            pwm_value = self.gui.heater_open_loop_pwm.value()
-            delta_time = current_time - self.previous_time
-            self.previous_time = current_time
-
-            temperature = Thermistor.get_temperature(self.channel_0.voltage)
-            if not hasattr(self, 'heater_pwm'):
-                self.heater_pwm = GPIO.PWM(Extruder.HEATER_PIN, 1)
-                self.heater_pwm.start(0)
-            self.heater_pwm.ChangeDutyCycle(pwm_value)
-
-            # self.gui.temperature_plot.update_plot(current_time, temperature, 0)
-
-            Database.temperature_timestamps.append(current_time)
-            Database.temperature_delta_time.append(delta_time)
-            Database.temperature_setpoint.append(0)
-            Database.temperature_error.append(0)
-            Database.temperature_pid_output.append(pwm_value)
-            Database.temperature_kp.append(0)
-            Database.temperature_ki.append(0)
-            Database.temperature_kd.append(0)
-        except Exception as e:
-            print(f"Error in temperature open loop control: {e}")
-            # Only safe to call show_message from main thread or via signals
+    def stop(self):
+        self.pwm.ChangeDutyCycle(0)
+        self.heater_pwm.ChangeDutyCycle(0)
