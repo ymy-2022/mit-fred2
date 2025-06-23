@@ -1,4 +1,4 @@
-"""File to control the extrusion process"""
+# File to control the extrusion process
 import time
 import math
 import RPi.GPIO as GPIO
@@ -22,23 +22,17 @@ class Thermistor:
 
     @classmethod
     def get_temperature(cls, voltage: float) -> float:
-        """Get the average temperature from the voltage using Steinhart-Hart 
-        equation"""
-        if voltage < 0.0001:  # Prevenir división por cero
+        """Get the average temperature from the voltage using Steinhart-Hart equation"""
+        if voltage < 0.0001:
             return 0
         resistance = ((cls.VOLTAGE_SUPPLY - voltage) * cls.RESISTOR )/ voltage
         ln = math.log(resistance / cls.RESISTANCE_AT_REFERENCE)
         temperature = (1 / ((ln / cls.BETA_COEFFICIENT) + (1 / cls.REFERENCE_TEMPERATURE))) - 273.15
         Database.temperature_readings.append(temperature)
-        average_temperature = 0
         if len(Database.temperature_readings) > cls.READINGS_TO_AVERAGE:
-            # Get last constant readings
-            average_temperature = (sum(Database.temperature_readings
-                                      [-cls.READINGS_TO_AVERAGE:]) /
-                                      cls.READINGS_TO_AVERAGE)
+            average_temperature = (sum(Database.temperature_readings[-cls.READINGS_TO_AVERAGE:]) / cls.READINGS_TO_AVERAGE)
         else:
-            average_temperature = (sum(Database.temperature_readings) /
-                                   len(Database.temperature_readings))
+            average_temperature = (sum(Database.temperature_readings) / len(Database.temperature_readings))
         return average_temperature
 
 class Extruder:
@@ -50,7 +44,7 @@ class Extruder:
     MINIMUM_DIAMETER = 0.3
     MAXIMUM_DIAMETER = 0.6
     STEPS_PER_REVOLUTION = 200
-    DEFAULT_RPM = 0.6 # TODO: Delay is not being used, will be removed temporarily
+    DEFAULT_RPM = 0.6
     SAMPLE_TIME = 0.1
     MAX_OUTPUT = 100
     MIN_OUTPUT = 0
@@ -84,14 +78,8 @@ class Extruder:
     def initialize_thermistor(self):
         """Initialize the SPI for thermistor temperature readings"""
         spi = busio.SPI(clock=board.SCK, MISO=board.MISO, MOSI=board.MOSI)
-
-        # Create the cs (chip select)
         cs = digitalio.DigitalInOut(board.D8)
-
-        # Create the mcp object
         mcp = MCP.MCP3008(spi, cs)
-
-        # Create analog inputs connected to the input pins on the MCP3008
         self.channel_0 = AnalogIn(mcp, MCP.P0)
 
     def set_motor_direction(self, clockwise: bool) -> None:
@@ -101,7 +89,7 @@ class Extruder:
     def set_motor_speed(self, rpm: float) -> None:
         """Set motor speed in RPM"""
         steps_per_second = (rpm * Extruder.STEPS_PER_REVOLUTION) / 60
-        frequency = steps_per_second   # Each cycle is two steps
+        frequency = steps_per_second
         self.pwm.ChangeFrequency(frequency)
         self.pwm.ChangeDutyCycle(50)
 
@@ -122,10 +110,11 @@ class Extruder:
         if current_time - self.previous_time <= Extruder.SAMPLE_TIME:
             return
         try:
-            target_temperature = self.gui.target_temperature.value()
-            kp = self.gui.temperature_kp.value()
-            ki = self.gui.temperature_ki.value()
-            kd = self.gui.temperature_kd.value()
+            # 95°C
+            target_temperature = 95.0
+            kp = 1
+            ki = 0.001
+            kd = 0.6
 
             delta_time = current_time - self.previous_time
             self.previous_time = current_time
@@ -143,7 +132,7 @@ class Extruder:
             
             self.heater_pwm.ChangeDutyCycle(output)
             
-            self.gui.temperature_plot.update_plot(current_time, temperature,target_temperature)
+            # self.gui.temperature_plot.update_plot(current_time, temperature, target_temperature)
             
             Database.temperature_timestamps.append(current_time)
             Database.temperature_delta_time.append(delta_time)
@@ -155,37 +144,29 @@ class Extruder:
             Database.temperature_kd.append(kd)
         except Exception as e:
             print(f"Error in temperature control loop: {e}")
-            self.gui.show_message("Error", "Error in temperature control loop",
-                                  "Please restart the program.")
-            
-    
+            self.gui.show_message("Error", "Error in temperature control loop. Please restart the program.")
+
     def temperature_open_loop_control(self, current_time: float) -> None:
         """Open loop PWM control of the heater"""
         if current_time - self.previous_time <= Extruder.SAMPLE_TIME:
             return
-            
         try:
             pwm_value = self.gui.heater_open_loop_pwm.value()
             delta_time = current_time - self.previous_time
             self.previous_time = current_time
             temperature = Thermistor.get_temperature(self.channel_0.voltage)
 
-            # Configurar PWM para el heater
             if not hasattr(self, 'heater_pwm'):
-                self.heater_pwm = GPIO.PWM(Extruder.HEATER_PIN, 1)  # 1kHz frequency
+                self.heater_pwm = GPIO.PWM(Extruder.HEATER_PIN, 1)
                 self.heater_pwm.start(0)
-
-            # Actualizar duty cycle del PWM
             self.heater_pwm.ChangeDutyCycle(pwm_value)
 
-            # Actualizar gráfica
-            self.gui.temperature_plot.update_plot(current_time, temperature, 0)
+            # self.gui.temperature_plot.update_plot(current_time, temperature, 0)
 
-            # Almacenar datos
             Database.temperature_timestamps.append(current_time)
             Database.temperature_delta_time.append(delta_time)
-            Database.temperature_setpoint.append(0)  # No hay setpoint en lazo abierto
-            Database.temperature_error.append(0)     # No hay error en lazo abierto
+            Database.temperature_setpoint.append(0)
+            Database.temperature_error.append(0)
             Database.temperature_pid_output.append(pwm_value)
             Database.temperature_kp.append(0)
             Database.temperature_ki.append(0)
@@ -194,4 +175,3 @@ class Extruder:
         except Exception as e:
             print(f"Error in temperature open loop control: {e}")
             self.gui.show_message("Error", "Error in temperature open loop control")
-                 
