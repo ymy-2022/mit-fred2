@@ -6,7 +6,6 @@ import board
 import digitalio
 import adafruit_mcp3xxx.mcp3008 as MCP
 from adafruit_mcp3xxx.analog_in import AnalogIn
-
 from database import Database
 from user_interface import UserInterface
 
@@ -54,16 +53,16 @@ class Extruder:
         GPIO.setup(Extruder.HEATER_PIN, GPIO.OUT)
         GPIO.setup(Extruder.DIRECTION_PIN, GPIO.OUT)
         GPIO.setup(Extruder.STEP_PIN, GPIO.OUT)
+
         self.set_motor_direction(False)
         self.pwm = GPIO.PWM(Extruder.STEP_PIN, 1000)
         self.pwm.start(0)
         self.heater_pwm = GPIO.PWM(Extruder.HEATER_PIN, 1)
         self.heater_pwm.start(0)
-
         self.initialize_thermistor()
+
         self.current_diameter = 0.0
         self.diameter_setpoint = Extruder.DEFAULT_DIAMETER
-
         self.previous_time = 0.0
         self.previous_error = 0.0
         self.integral = 0.0
@@ -93,7 +92,6 @@ class Extruder:
         except Exception as e:
             print(f"Error in stepper control loop: {e}")
             # Only safe to call show_message from main thread or via signals
-            # self.gui.show_message("Error", "Stepper control loop error")
 
     def temperature_control_loop(self, current_time: float) -> None:
         if current_time - self.previous_time <= Extruder.SAMPLE_TIME:
@@ -106,13 +104,15 @@ class Extruder:
 
             delta_time = current_time - self.previous_time
             self.previous_time = current_time
-            temperature = Thermistor.get_temperature(self.channel_0.voltage)
 
+            temperature = Thermistor.get_temperature(self.channel_0.voltage)
             error = target_temperature - temperature
             self.integral += error * delta_time
             derivative = (error - self.previous_error) / delta_time
             self.previous_error = error
+
             output = kp * error + ki * self.integral + kd * derivative
+
             if output > Extruder.MAX_OUTPUT:
                 output = Extruder.MAX_OUTPUT
             elif output < Extruder.MIN_OUTPUT:
@@ -133,7 +133,6 @@ class Extruder:
         except Exception as e:
             print(f"Error in temperature control loop: {e}")
             # Only safe to call show_message from main thread or via signals
-            # self.gui.show_message("Error", "Error in temperature control loop. Please restart the program.")
 
     def temperature_open_loop_control(self, current_time: float) -> None:
         if current_time - self.previous_time <= Extruder.SAMPLE_TIME:
@@ -142,8 +141,8 @@ class Extruder:
             pwm_value = self.gui.heater_open_loop_pwm.value()
             delta_time = current_time - self.previous_time
             self.previous_time = current_time
-            temperature = Thermistor.get_temperature(self.channel_0.voltage)
 
+            temperature = Thermistor.get_temperature(self.channel_0.voltage)
             if not hasattr(self, 'heater_pwm'):
                 self.heater_pwm = GPIO.PWM(Extruder.HEATER_PIN, 1)
                 self.heater_pwm.start(0)
@@ -159,8 +158,6 @@ class Extruder:
             Database.temperature_kp.append(0)
             Database.temperature_ki.append(0)
             Database.temperature_kd.append(0)
-
         except Exception as e:
             print(f"Error in temperature open loop control: {e}")
             # Only safe to call show_message from main thread or via signals
-            # self.gui.show_message("Error", "Error in temperature open loop control")
